@@ -1,0 +1,160 @@
+.loader {
+  align-items: center;
+  animation: loaderAutoHide 360ms ease 4s forwards;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(215, 157, 66, 0.16), transparent 34%),
+    linear-gradient(135deg, #001b12 0%, #0d5b46 54%, #001b12 100%);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  overflow: hidden;
+  position: fixed;
+  transition:
+    opacity 520ms ease,
+    visibility 520ms ease;
+  z-index: 99999;
+}
+
+.loaderLeaving {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loaderBackdrop {
+  animation: loaderSweep 2.4s ease-in-out infinite;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 44%,
+    rgba(215, 157, 66, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 56%,
+    transparent 100%
+  );
+  inset: -20%;
+  position: absolute;
+  transform: translateX(-60%) rotate(8deg);
+}
+
+.loaderContent {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: relative;
+  width: min(360px, calc(100vw - 48px));
+}
+
+.loaderMark {
+  align-items: center;
+  display: flex;
+  height: 156px;
+  justify-content: center;
+  position: relative;
+  width: 156px;
+}
+
+.loaderRing,
+.loaderRingInner {
+  border-radius: 999px;
+  inset: 0;
+  position: absolute;
+}
+
+.loaderRing {
+  animation: loaderSpin 1.9s linear infinite;
+  background:
+    conic-gradient(from 0deg, transparent 0deg, #d79d42 74deg, transparent 130deg),
+    conic-gradient(from 180deg, transparent 0deg, rgba(255, 225, 138, 0.9) 52deg, transparent 112deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3px));
+}
+
+.loaderRingInner {
+  animation: loaderSpinReverse 2.6s linear infinite;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  inset: 18px;
+}
+
+.loaderLogo {
+  height: auto;
+  max-width: 118px;
+  object-fit: contain;
+  position: relative;
+  width: 118px;
+}
+
+.loaderEyebrow {
+  color: rgba(255, 255, 255, 0.82);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.loaderTrack {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  height: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.loaderProgress {
+  animation: loaderProgress 1.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  background: linear-gradient(90deg, transparent, #d79d42, #ffe18a, transparent);
+  display: block;
+  height: 100%;
+  width: 58%;
+}
+
+@keyframes loaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loaderSpinReverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes loaderProgress {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(180%);
+  }
+}
+
+@keyframes loaderSweep {
+  50% {
+    transform: translateX(60%) rotate(8deg);
+  }
+
+  100% {
+    transform: translateX(60%) rotate(8deg);
+  }
+}
+
+@keyframes loaderAutoHide {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loaderBackdrop,
+  .loaderRing,
+  .loaderRingInner,
+  .loaderProgress {
+    animation: none;
+  }
+}

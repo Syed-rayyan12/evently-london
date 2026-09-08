@@ -1,0 +1,10 @@
+
+> next-app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.3.2 (Turbopack)
+- Local:         http://localhost:3001
+- Network:       http://192.168.18.10:3001
+✓ Ready in 2.1s
+✓ Running next.config.ts took 122ms
+[?25h

@@ -1,0 +1,61 @@
+.beamSvg {
+  height: 100%;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+  z-index: 20;
+}
+
+.beamTablet,
+.beamDesktop {
+  display: none;
+}
+
+.beamLight {
+  animation: whyChooseBorderBeam 5.8s linear infinite;
+  fill: none;
+  filter: drop-shadow(0 0 5px rgba(255, 225, 137, 0.85));
+  opacity: 0.95;
+  stroke: #ffe18a;
+  stroke-dasharray: 7 93;
+  stroke-dashoffset: 100;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+@keyframes whyChooseBorderBeam {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (min-width: 640px) {
+  .beamMobile {
+    display: none;
+  }
+
+  .beamTablet {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .beamTablet {
+    display: none;
+  }
+
+  .beamDesktop {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beamLight {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
