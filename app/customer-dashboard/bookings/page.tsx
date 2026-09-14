@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   CalendarCheck2,
@@ -14,11 +14,13 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
+import { listCustomerEnquiries, type CustomerEnquiry } from "@/lib/customer";
+import { getCustomerProfileSession } from "@/lib/customer-session";
 
 type BookingStatus = "Confirmed" | "Completed" | "Pending";
 
 type Booking = {
-  id: number;
+  id: string;
   vendor: string;
   vendorType: string;
   image: string;
@@ -30,58 +32,43 @@ type Booking = {
   time: string;
   guests: string;
   price: string;
+  notes: string;
 };
 
-const bookings: Booking[] = [
-  {
-    id: 1,
-    vendor: "Royal Moments Photography",
-    vendorType: "Photography",
-    image: "/images/mej.png",
-    status: "Confirmed",
-    date: "12 Sep 2026",
-    location: "Mayfair, London",
-    packageName: "Premium Wedding Package",
-    serviceName: "Wedding Photography",
-    time: "10:00 AM - 10:00 PM",
-    guests: "180",
-    price: "GBP 1,500",
-  },
-  {
-    id: 2,
-    vendor: "Prime Venue Collection",
-    vendorType: "Venue",
-    image: "/images/venue.png",
-    status: "Completed",
-    date: "18 Sep 2026",
-    location: "Pearl Suite, Manchester",
-    packageName: "Grand Hall Booking",
-    serviceName: "Venue Booking",
-    time: "05:00 PM - 11:30 PM",
-    guests: "120",
-    price: "GBP 2,200",
-  },
-  {
-    id: 3,
-    vendor: "Signature Flavours Catering",
-    vendorType: "Catering",
-    image: "/images/card-4.png",
-    status: "Confirmed",
-    date: "02 Oct 2026",
-    location: "Private Residence, Bristol",
-    packageName: "Classic Dinner Buffet",
-    serviceName: "Dinner Catering",
-    time: "07:00 PM - 10:00 PM",
-    guests: "75",
-    price: "GBP 4,200",
-  },
-];
-
-export default function AdminBookingsPage() {
+export default function CustomerBookingsPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [cancelBooking, setCancelBooking] = useState<Booking | null>(null);
+  const [status, setStatus] = useState<"loading" | "idle" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const session = getCustomerProfileSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Customer login is required to load bookings.");
+      });
+      return;
+    }
+
+    void listCustomerEnquiries(session)
+      .then((result) => {
+        setBookings(
+          result.enquiries
+            .filter((enquiry) => enquiry.status.toLowerCase() === "booked")
+            .map(mapCustomerBooking)
+        );
+        setStatus("idle");
+        setMessage("");
+      })
+      .catch((error) => {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load bookings.");
+      });
+  }, []);
 
   const filteredBookings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -111,9 +98,9 @@ export default function AdminBookingsPage() {
         return a.status.localeCompare(b.status);
       }
 
-      return b.id - a.id;
+      return b.id.localeCompare(a.id);
     });
-  }, [query, sortBy]);
+  }, [bookings, query, sortBy]);
 
   return (
     <div className="space-y-7">
@@ -122,8 +109,7 @@ export default function AdminBookingsPage() {
           Bookings
         </h2>
         <p className="mt-3 max-w-2xl font-inter text-[16px] leading-7 text-[#68746e]">
-          Review confirmed and completed bookings, package details, service
-          timing, location, and booking price.
+          Review your booked enquiries, package details, event timing, and vendor information.
         </p>
       </section>
 
@@ -139,22 +125,31 @@ export default function AdminBookingsPage() {
               className="w-full bg-transparent font-inter text-sm text-[#16231f] outline-none placeholder:text-[#68746e]"
             />
           </label>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <label className="flex min-h-12 items-center gap-3 rounded-[10px] border border-[#0D5B46] px-4">
-              <SlidersHorizontal className="h-5 w-5 text-[#0D5B46]" aria-hidden="true" />
-              <select
-                value={sortBy}
-                onChange={(event) => setSortBy(event.target.value)}
-                className="bg-transparent font-inter text-sm font-medium text-[#0D5B46] outline-none"
-              >
-                <option value="latest">Filter</option>
-                <option value="name">Name</option>
-                <option value="status">Status</option>
-              </select>
-            </label>
-          </div>
+          <label className="flex min-h-12 items-center gap-3 rounded-[10px] border border-[#0D5B46] px-4">
+            <SlidersHorizontal className="h-5 w-5 text-[#0D5B46]" aria-hidden="true" />
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="bg-transparent font-inter text-sm font-medium text-[#0D5B46] outline-none"
+            >
+              <option value="latest">Filter</option>
+              <option value="name">Name</option>
+              <option value="status">Status</option>
+            </select>
+          </label>
         </div>
       </section>
+
+      {message ? (
+        <section
+          className={`rounded-[12px] px-4 py-3 font-inter text-sm font-semibold ${
+            status === "error" ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+          }`}
+          aria-live="polite"
+        >
+          {message}
+        </section>
+      ) : null}
 
       <section className="grid gap-5 lg:grid-cols-2">
         {filteredBookings.map((booking) => (
@@ -170,6 +165,7 @@ export default function AdminBookingsPage() {
                   fill
                   sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover"
+                  unoptimized={isUnoptimizedImage(booking.image)}
                 />
               </div>
               <div className="min-w-0 flex-1">
@@ -189,29 +185,26 @@ export default function AdminBookingsPage() {
                   <CardMeta icon={CalendarCheck2} label="Date" value={booking.date} />
                   <CardMeta icon={MapPin} label="Location" value={booking.location} />
                   <CardMeta icon={Package} label="Package" value={booking.packageName} />
-                  <CardMeta icon={Users} label="Price" value={booking.price} />
+                  <CardMeta icon={Users} label="Guests" value={booking.guests} />
                 </div>
               </div>
-              <div className="grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSelectedBooking(booking)}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#0D5B46] px-4 font-inter text-[14px] font-semibold text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
-                >
-                  <Eye className="h-4 w-4" aria-hidden="true" />
-                  View Detail
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCancelBooking(booking)}
-                  className="inline-flex min-h-10 items-center justify-center rounded-[10px] border border-gray-300 px-4 font-inter text-[14px] font-semibold text-gray-400 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                >
-                  Cancel Booking
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBooking(booking)}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#0D5B46] px-4 font-inter text-[14px] font-semibold text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
+              >
+                <Eye className="h-4 w-4" aria-hidden="true" />
+                View Detail
+              </button>
             </div>
           </article>
         ))}
+
+        {filteredBookings.length === 0 ? (
+          <div className="rounded-[16px] bg-white px-4 py-12 text-center font-inter text-sm font-semibold text-[#68746e] shadow-lg shadow-[#0D5B46]/10 lg:col-span-2">
+            {status === "loading" ? "Loading bookings..." : "No booked enquiries found."}
+          </div>
+        ) : null}
       </section>
 
       {selectedBooking ? (
@@ -225,6 +218,7 @@ export default function AdminBookingsPage() {
                   fill
                   sizes="64px"
                   className="object-cover"
+                  unoptimized={isUnoptimizedImage(selectedBooking.image)}
                 />
               </span>
               <div>
@@ -244,7 +238,7 @@ export default function AdminBookingsPage() {
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <DetailItem label="Date" value={selectedBooking.date} />
             <DetailItem label="Location" value={selectedBooking.location} />
-            <DetailItem label="Guests" value={`${selectedBooking.guests} guests`} />
+            <DetailItem label="Guests" value={selectedBooking.guests} />
             <DetailItem label="Status" value={selectedBooking.status} />
           </div>
 
@@ -260,9 +254,18 @@ export default function AdminBookingsPage() {
               <DetailItem label="Date" value={selectedBooking.date} compact />
               <DetailItem label="Guest" value={selectedBooking.guests} compact />
             </div>
-            <div className="mt-5 text-right font-inter text-[22px] font-semibold text-[#01241D]">
+            <div className="mt-5 text-right font-inter text-[18px] font-semibold text-[#01241D]">
               {selectedBooking.price}
             </div>
+          </div>
+
+          <div className="mt-4 rounded-[12px] border border-[#dfe7e2] p-4">
+            <p className="font-inter text-[14px] font-medium capitalize tracking-[0.14em] text-[#000]">
+              Notes
+            </p>
+            <p className="mt-2 font-inter text-[15px] leading-7 text-gray-700/70">
+              {selectedBooking.notes}
+            </p>
           </div>
 
           <div className="mt-6 flex justify-end">
@@ -276,36 +279,65 @@ export default function AdminBookingsPage() {
           </div>
         </Modal>
       ) : null}
-
-      {cancelBooking ? (
-        <Modal title="Cancel Booking" onClose={() => setCancelBooking(null)}>
-          <p className="font-inter text-[15px] leading-7 text-[#68746e]">
-            Are you sure you want to cancel this booking with{" "}
-            <span className="font-semibold text-[#16231f]">
-              {cancelBooking.vendor}
-            </span>
-            ?
-          </p>
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => setCancelBooking(null)}
-              className="rounded-md border border-gray-300 px-5 py-2.5 font-inter text-sm font-medium text-gray-400 transition-colors hover:bg-gray-50"
-            >
-              Keep Booking
-            </button>
-            <button
-              type="button"
-              onClick={() => setCancelBooking(null)}
-              className="rounded-md bg-[#b42318] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#8f1d14]"
-            >
-              Cancel Booking
-            </button>
-          </div>
-        </Modal>
-      ) : null}
     </div>
   );
+}
+
+function mapCustomerBooking(enquiry: CustomerEnquiry): Booking {
+  const details = getEnquiryDetails(enquiry.message);
+  const vendorProfile = enquiry.vendor?.vendorProfile;
+
+  return {
+    id: enquiry.id,
+    vendor: vendorProfile?.vendorName ?? enquiry.vendor?.name ?? enquiry.vendor?.email ?? "Vendor",
+    vendorType: vendorProfile?.category ?? "Vendor",
+    image: vendorProfile?.imageUrl ?? "/images/profile-2.png",
+    status: "Confirmed",
+    date: details.eventDate ?? "Not provided",
+    location: details.location ?? "Not provided",
+    packageName: enquiry.packageName ?? details.packageName ?? "Custom quote",
+    serviceName: details.service ?? details.vendor ?? "Quote request",
+    time: "To be confirmed",
+    guests: details.guestCount ?? "Not provided",
+    price: "Confirmed by vendor response",
+    notes: details.requirements ?? details.customerRequest ?? enquiry.message,
+  };
+}
+
+function getEnquiryDetails(message: string) {
+  return {
+    service: getMessageField(message, "Service"),
+    vendor: getMessageField(message, "Vendor"),
+    packageName: getMessageField(message, "Package"),
+    eventDate: getMessageField(message, "Event Date"),
+    guestCount: getMessageField(message, "Guest Count"),
+    location: getMessageField(message, "Location"),
+    requirements: getMessageField(message, "Requirements"),
+    customerRequest: getCustomerRequest(message),
+  };
+}
+
+function getMessageField(message: string, label: string) {
+  const line = message
+    .split("\n")
+    .find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+
+  return line?.replace(new RegExp(`^${label}:\\s*`, "i"), "").trim() || undefined;
+}
+
+function getCustomerRequest(message: string) {
+  const marker = "Customer request:";
+  const markerIndex = message.toLowerCase().indexOf(marker.toLowerCase());
+
+  if (markerIndex === -1) {
+    return undefined;
+  }
+
+  return message.slice(markerIndex + marker.length).trim() || undefined;
+}
+
+function isUnoptimizedImage(src: string) {
+  return src.startsWith("blob:") || src.startsWith("data:");
 }
 
 function CardMeta({
@@ -378,8 +410,8 @@ function Modal({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-5 py-8">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[16px] bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/45 px-5 py-8 sm:py-10">
+      <div className="my-auto max-h-[calc(100vh-4rem)] w-full max-w-2xl overflow-y-auto rounded-[16px] bg-white p-6 shadow-2xl">
         <div className="mb-6 flex items-start justify-between gap-4">
           <h2 className="font-inter text-[22px] font-semibold text-[#16231f]">
             {title}
@@ -398,4 +430,3 @@ function Modal({
     </div>
   );
 }
-

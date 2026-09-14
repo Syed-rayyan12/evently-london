@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { WebsiteAuthActions } from "./website-auth-actions";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -59,24 +60,10 @@ export function WebsiteHeader({ overlay = false }: WebsiteHeaderProps) {
           ))}
         </nav>
 
-        <div className="justify-self-end flex items-center gap-2">
-          <Link
-            href="/login"
-            className={loginClassName}
-          >
-            <span className="btn-slide-overlay btn-slide-overlay-gold" />
-            <span className="btn-slide-label transition-colors duration-300 group-hover:text-ink group-focus-visible:text-ink">
-              Login
-            </span>
-          </Link>
-          <Link
-            href="/signup"
-            className="btn-slide group h-11 rounded-[10px] bg-gold px-10 font-inter text-[16px] font-normal text-white"
-          >
-            <span className="btn-slide-overlay btn-slide-overlay-green" />
-            <span className="btn-slide-label">Sign up</span>
-          </Link>
-        </div>
+        <WebsiteAuthActions
+          loginClassName={loginClassName}
+          signupClassName="btn-slide group h-11 rounded-[10px] bg-gold px-10 font-inter text-[16px] font-normal text-white"
+        />
       </div>
     </header>
   );

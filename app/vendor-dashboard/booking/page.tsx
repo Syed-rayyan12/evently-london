@@ -1,62 +1,56 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Eye, ListFilter, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Eye, ListFilter, Search, X } from "lucide-react";
+import { listVendorEnquiries, type VendorEnquiry } from "@/lib/auth";
+import { getVendorProfileSession } from "@/lib/vendor-session";
 
 type Booking = {
-  id: number;
+  id: string;
   customer: string;
   event: string;
   location: string;
   eventDate: string;
+  packageName: string;
+  service: string;
+  guests: string;
   status: string;
   notes: string;
 };
 
-const initialBookings: Booking[] = [
-  {
-    id: 1,
-    customer: "Ayesha Khan",
-    event: "Wedding",
-    location: "London Banquet Hall",
-    eventDate: "12 Sep 2026",
-    status: "Confirmed",
-    notes: "Full-day photography booking with reception coverage.",
-  },
-  {
-    id: 2,
-    customer: "Hamza Malik",
-    event: "Engagement",
-    location: "Pearl Suite",
-    eventDate: "18 Sep 2026",
-    status: "Pending",
-    notes: "Venue booking awaiting final guest count confirmation.",
-  },
-  {
-    id: 3,
-    customer: "Sara Ahmed",
-    event: "Baby Shower",
-    location: "Garden Lounge",
-    eventDate: "24 Sep 2026",
-    status: "Confirmed",
-    notes: "Decor and dessert table setup confirmed for afternoon event.",
-  },
-  {
-    id: 4,
-    customer: "Bilal Raza",
-    event: "Birthday",
-    location: "Private Residence",
-    eventDate: "02 Oct 2026",
-    status: "Review",
-    notes: "Entertainment package under review before final approval.",
-  },
-];
-
 export default function BookingPage() {
-  const [bookings, setBookings] = useState(initialBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [query, setQuery] = useState("");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [status, setStatus] = useState<"loading" | "idle" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const session = getVendorProfileSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Vendor login is required to load bookings.");
+      });
+      return;
+    }
+
+    void listVendorEnquiries(session)
+      .then((result) => {
+        setBookings(
+          result.enquiries
+            .filter((enquiry) => enquiry.status.toLowerCase() === "booked")
+            .map(mapVendorBooking)
+        );
+        setStatus("idle");
+        setMessage("");
+      })
+      .catch((error) => {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load bookings.");
+      });
+  }, []);
 
   const filteredBookings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -71,6 +65,8 @@ export default function BookingPage() {
         booking.event,
         booking.location,
         booking.eventDate,
+        booking.packageName,
+        booking.service,
         booking.status,
       ]
         .join(" ")
@@ -79,28 +75,6 @@ export default function BookingPage() {
     );
   }, [bookings, query]);
 
-  const cancelBooking = () => {
-    if (!bookingToCancel) {
-      return;
-    }
-
-    setBookings((currentBookings) =>
-      currentBookings.filter((booking) => booking.id !== bookingToCancel.id),
-    );
-    setBookingToCancel(null);
-  };
-
-  const cancelSelectedBooking = () => {
-    if (!selectedBooking) {
-      return;
-    }
-
-    setBookings((currentBookings) =>
-      currentBookings.filter((booking) => booking.id !== selectedBooking.id),
-    );
-    setSelectedBooking(null);
-  };
-
   return (
     <div className="space-y-7">
       <section className="rounded-[16px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
@@ -108,8 +82,7 @@ export default function BookingPage() {
           Booking
         </h2>
         <p className="mt-3 max-w-2xl font-inter text-[16px] leading-7 text-[#68746e]">
-          Manage customer bookings, event locations, dates, status updates, and
-          cancellation requests from a focused dashboard table.
+          Manage booked customer enquiries, event details, packages, and dates.
         </p>
       </section>
 
@@ -135,14 +108,27 @@ export default function BookingPage() {
         </div>
       </section>
 
-      <section className="rounded-[16px] bg-white rounded-lg shadow-lg shadow-[#0D5B46]/10">
+      {message ? (
+        <section
+          className={`rounded-[12px] px-4 py-3 font-inter text-sm font-semibold ${
+            status === "error" ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+          }`}
+          aria-live="polite"
+        >
+          {message}
+        </section>
+      ) : null}
+
+      <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left">
+          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left">
             <thead>
               <tr className="bg-[#f5f7f4]">
                 {[
                   "Customer",
                   "Event",
+                  "Service",
+                  "Package",
                   "Location",
                   "Event Date",
                   "Status",
@@ -160,53 +146,48 @@ export default function BookingPage() {
             <tbody>
               {filteredBookings.map((booking) => (
                 <tr key={booking.id}>
-                  <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] font-medium text-[#16231f]">
-                    {booking.customer}
-                  </td>
-                  <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
-                    {booking.event}
-                  </td>
-                  <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
-                    {booking.location}
-                  </td>
-                  <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
-                    {booking.eventDate}
-                  </td>
+                  <TableCell strong>{booking.customer}</TableCell>
+                  <TableCell>{booking.event}</TableCell>
+                  <TableCell>{booking.service}</TableCell>
+                  <TableCell>{booking.packageName}</TableCell>
+                  <TableCell>{booking.location}</TableCell>
+                  <TableCell>{booking.eventDate}</TableCell>
                   <td className="border-b border-[#edf1ee] px-4 py-4">
-                    <span className="rounded-full bg-[#0D5B46]/10 px-3 py-1 font-inter text-[13px] font-medium text-[#0D5B46]">
+                    <span className="rounded-full bg-emerald-50 px-3 py-1 font-inter text-[13px] font-medium text-emerald-700">
                       {booking.status}
                     </span>
                   </td>
                   <td className="border-b border-[#edf1ee] px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedBooking(booking)}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#0D5B46] bg-transparent text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
-                        aria-label={`View ${booking.customer} booking`}
-                      >
-                        <Eye className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setBookingToCancel(booking)}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-600 hover:text-white"
-                        aria-label={`Cancel ${booking.customer} booking`}
-                      >
-                        <Trash2 className="h-5 w-5" aria-hidden="true" />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBooking(booking)}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-[#0D5B46] bg-transparent text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
+                      aria-label={`View ${booking.customer} booking`}
+                    >
+                      <Eye className="h-5 w-5" aria-hidden="true" />
+                    </button>
                   </td>
                 </tr>
               ))}
+
+              {filteredBookings.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="border-b border-[#edf1ee] px-4 py-10 text-center font-inter text-sm font-medium text-[#68746e]"
+                  >
+                    {status === "loading" ? "Loading bookings..." : "No booked enquiries found."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
       </section>
 
       {selectedBooking ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-5">
-          <div className="w-full max-w-xl rounded-[16px] bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/45 px-5 py-8 sm:py-10">
+          <div className="my-auto max-h-[calc(100vh-4rem)] w-full max-w-xl overflow-y-auto rounded-[16px] bg-white p-6 shadow-2xl">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h3 className="font-inter text-[20px] font-semibold text-[#16231f]">
@@ -234,7 +215,10 @@ export default function BookingPage() {
                 ["Booking ID", formatBookingId(selectedBooking.id)],
                 ["Customer", selectedBooking.customer],
                 ["Event", selectedBooking.event],
+                ["Service", selectedBooking.service],
+                ["Package", selectedBooking.packageName],
                 ["Location", selectedBooking.location],
+                ["Guest Count", selectedBooking.guests],
                 ["Event Date", selectedBooking.eventDate],
                 ["Status", selectedBooking.status],
               ].map(([label, value]) => (
@@ -258,53 +242,13 @@ export default function BookingPage() {
               </p>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={cancelSelectedBooking}
-                className="rounded-md bg-red-600 px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-red-700"
-              >
-                Cancel Booking
-              </button>
+            <div className="mt-6 flex justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedBooking(null)}
                 className="rounded-md border border-[#dfe7e2] px-5 py-2.5 font-inter text-sm font-medium text-[#16231f] transition-colors hover:bg-[#f5f7f4]"
               >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {bookingToCancel ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-5">
-          <div className="w-full max-w-md rounded-[16px] bg-white p-6 shadow-2xl">
-            <h3 className="font-inter text-[20px] font-semibold text-[#16231f]">
-              Delete Booking
-            </h3>
-            <p className="mt-3 font-inter text-[15px] leading-7 text-[#68746e]">
-              Are you sure you want to delete the booking for{" "}
-              <span className="font-semibold text-[#16231f]">
-                {bookingToCancel.customer}
-              </span>
-              ? This will remove the row from the table.
-            </p>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setBookingToCancel(null)}
-                className="rounded-md border border-[#dfe7e2] px-5 py-2.5 font-inter text-sm font-medium text-[#16231f] transition-colors hover:bg-[#f5f7f4]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={cancelBooking}
-                className="rounded-md bg-red-600 px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-red-700"
-              >
-                Delete Booking
+                Close
               </button>
             </div>
           </div>
@@ -314,6 +258,68 @@ export default function BookingPage() {
   );
 }
 
-function formatBookingId(id: number) {
-  return `BK-${String(id).padStart(3, "0")}`;
+function mapVendorBooking(enquiry: VendorEnquiry): Booking {
+  const details = getEnquiryDetails(enquiry.message);
+
+  return {
+    id: enquiry.id,
+    customer: enquiry.customer.name,
+    event: details.eventType ?? "Booked event",
+    location: details.location ?? "Not provided",
+    eventDate: details.eventDate ?? "Not provided",
+    packageName: enquiry.packageName ?? details.packageName ?? "Custom quote",
+    service: details.service ?? details.vendor ?? "Quote request",
+    guests: details.guestCount ?? "Not provided",
+    status: "Confirmed",
+    notes: details.requirements ?? details.customerRequest ?? enquiry.message,
+  };
+}
+
+function getEnquiryDetails(message: string) {
+  return {
+    service: getMessageField(message, "Service"),
+    vendor: getMessageField(message, "Vendor"),
+    packageName: getMessageField(message, "Package"),
+    eventType: getMessageField(message, "Event Type"),
+    eventDate: getMessageField(message, "Event Date"),
+    guestCount: getMessageField(message, "Guest Count"),
+    location: getMessageField(message, "Location"),
+    requirements: getMessageField(message, "Requirements"),
+    customerRequest: getCustomerRequest(message),
+  };
+}
+
+function getMessageField(message: string, label: string) {
+  const line = message
+    .split("\n")
+    .find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+
+  return line?.replace(new RegExp(`^${label}:\\s*`, "i"), "").trim() || undefined;
+}
+
+function getCustomerRequest(message: string) {
+  const marker = "Customer request:";
+  const markerIndex = message.toLowerCase().indexOf(marker.toLowerCase());
+
+  if (markerIndex === -1) {
+    return undefined;
+  }
+
+  return message.slice(markerIndex + marker.length).trim() || undefined;
+}
+
+function formatBookingId(id: string) {
+  return `BK-${id.slice(-6).toUpperCase()}`;
+}
+
+function TableCell({ children, strong = false }: { children: React.ReactNode; strong?: boolean }) {
+  return (
+    <td
+      className={`border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] ${
+        strong ? "font-medium text-[#16231f]" : "text-[#68746e]"
+      }`}
+    >
+      {children}
+    </td>
+  );
 }

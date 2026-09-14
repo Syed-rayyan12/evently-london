@@ -8,8 +8,7 @@ type PortfolioTabProps = {
 export default function PortfolioTab({ images }: PortfolioTabProps) {
   return (
     <div className="p-6">
-      
-      <VendorGallery images={images} />
+      <VendorGallery images={images} variant="full" />
     </div>
   );
 }

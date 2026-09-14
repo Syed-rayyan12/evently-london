@@ -1,77 +1,72 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
+  CalendarCheck2,
   Eye,
   MessageSquareText,
   Search,
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import {
+  bookCustomerEnquiry,
+  listCustomerEnquiries,
+  type CustomerEnquiry
+} from "@/lib/customer";
+import { getCustomerProfileSession } from "@/lib/customer-session";
 
-type EnquiryStatus = "New" | "Replied" | "Closed";
+type EnquiryStatus = "New" | "Replied" | "Booked" | "Closed";
 
 type Enquiry = {
-  id: number;
+  id: string;
   vendor: string;
   vendorType: string;
   vendorImage: string;
-  event: string;
+  eventType: string;
+  packageName: string;
   service: string;
   eventDate: string;
   submitted: string;
   status: EnquiryStatus;
   requirement: string;
+  vendorResponse: string;
+  respondedAt: string;
 };
 
-const enquiries: Enquiry[] = [
-  {
-    id: 1,
-    vendor: "Royal Moments Photography",
-    vendorType: "Photography",
-    vendorImage: "/images/mej.png",
-    event: "Sharma Wedding",
-    service: "Wedding Photography",
-    eventDate: "12 Sep 2026",
-    submitted: "01 Sep 2026",
-    status: "New",
-    requirement:
-      "Need full-day wedding coverage, couple portraits, family sessions, and a cinematic highlight video.",
-  },
-  {
-    id: 2,
-    vendor: "Prime Venue Collection",
-    vendorType: "Venue",
-    vendorImage: "/images/venue.png",
-    event: "Engagement Celebration",
-    service: "Venue Booking",
-    eventDate: "18 Sep 2026",
-    submitted: "31 Aug 2026",
-    status: "Replied",
-    requirement:
-      "Looking for a refined hall with seating for 120 guests, stage area, and parking access.",
-  },
-  {
-    id: 3,
-    vendor: "Signature Flavours Catering",
-    vendorType: "Catering",
-    vendorImage: "/images/card-4.png",
-    event: "Birthday Celebration",
-    service: "Dinner Catering",
-    eventDate: "02 Oct 2026",
-    submitted: "30 Aug 2026",
-    status: "Closed",
-    requirement:
-      "Buffet menu for 75 guests with vegetarian options and dessert table service.",
-  },
-];
-
-export default function AdminEnquiriesPage() {
+export default function CustomerEnquiriesPage() {
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
+  const [loadStatus, setLoadStatus] = useState<"loading" | "idle" | "error">("loading");
+  const [message, setMessage] = useState("");
+  const [bookingId, setBookingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const session = getCustomerProfileSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setLoadStatus("error");
+        setMessage("Customer login is required to load enquiries.");
+      });
+      return;
+    }
+
+    void listCustomerEnquiries(session)
+      .then((result) => {
+        setEnquiries(result.enquiries.map(mapCustomerEnquiry));
+        setLoadStatus("idle");
+        setMessage("");
+      })
+      .catch((error) => {
+        setLoadStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load enquiries.");
+      });
+  }, []);
 
   const filteredEnquiries = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -80,11 +75,13 @@ export default function AdminEnquiriesPage() {
           [
             enquiry.vendor,
             enquiry.vendorType,
-            enquiry.event,
+            enquiry.eventType,
+            enquiry.packageName,
             enquiry.service,
             enquiry.eventDate,
             enquiry.submitted,
             enquiry.status,
+            enquiry.vendorResponse,
           ]
             .join(" ")
             .toLowerCase()
@@ -101,9 +98,42 @@ export default function AdminEnquiriesPage() {
         return a.status.localeCompare(b.status);
       }
 
-      return b.id - a.id;
+      return b.submitted.localeCompare(a.submitted);
     });
-  }, [query, sortBy]);
+  }, [enquiries, query, sortBy]);
+
+  async function handleBookNow(enquiry: Enquiry) {
+    const session = getCustomerProfileSession();
+
+    if (!session?.token) {
+      setLoadStatus("error");
+      setMessage("Customer login is required to book an enquiry.");
+      return;
+    }
+
+    setBookingId(enquiry.id);
+    setMessage("");
+
+    try {
+      const result = await bookCustomerEnquiry(enquiry.id, session);
+      const bookedEnquiry = mapCustomerEnquiry(result.enquiry);
+
+      setEnquiries((current) =>
+        current.map((item) => (item.id === bookedEnquiry.id ? bookedEnquiry : item))
+      );
+      setSelectedEnquiry((current) =>
+        current?.id === bookedEnquiry.id ? bookedEnquiry : current
+      );
+      setLoadStatus("idle");
+      setMessage("Booking sent to the vendor.");
+      window.dispatchEvent(new Event("evently.customer.updated"));
+    } catch (error) {
+      setLoadStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to book this enquiry.");
+    } finally {
+      setBookingId(null);
+    }
+  }
 
   return (
     <div className="space-y-7">
@@ -144,14 +174,28 @@ export default function AdminEnquiriesPage() {
         </div>
       </section>
 
+      {message ? (
+        <section
+          className={`rounded-[12px] px-4 py-3 font-inter text-sm font-semibold ${
+            loadStatus === "error"
+              ? "bg-rose-50 text-rose-700"
+              : "bg-emerald-50 text-emerald-700"
+          }`}
+          aria-live="polite"
+        >
+          {message}
+        </section>
+      ) : null}
+
       <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left">
+          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left">
             <thead>
               <tr className="bg-[#f5f7f4]">
                 {[
                   "Vendor",
-                  "Events",
+                  "Event Type",
+                  "Package",
                   "Services",
                   "Event Date",
                   "Submitted",
@@ -179,6 +223,7 @@ export default function AdminEnquiriesPage() {
                           fill
                           sizes="40px"
                           className="object-cover"
+                          unoptimized={isUnoptimizedImage(enquiry.vendorImage)}
                         />
                       </span>
                       <span className="min-w-0">
@@ -191,7 +236,8 @@ export default function AdminEnquiriesPage() {
                       </span>
                     </div>
                   </td>
-                  <TableCell>{enquiry.event}</TableCell>
+                  <TableCell>{enquiry.eventType}</TableCell>
+                  <TableCell>{enquiry.packageName}</TableCell>
                   <TableCell>{enquiry.service}</TableCell>
                   <TableCell>{enquiry.eventDate}</TableCell>
                   <TableCell>{enquiry.submitted}</TableCell>
@@ -199,17 +245,41 @@ export default function AdminEnquiriesPage() {
                     <StatusBadge status={enquiry.status} />
                   </td>
                   <td className="border-b border-[#edf1ee] px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedEnquiry(enquiry)}
-                      className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[10px] border border-[#01241D] px-3 font-inter text-[13px] font-semibold text-[#01241D] transition-colors hover:bg-[#01241D]/10"
-                    >
-                      <Eye className="h-4 w-4" aria-hidden="true" />
-                      View
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEnquiry(enquiry)}
+                        className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[10px] border border-[#01241D] px-3 font-inter text-[13px] font-semibold text-[#01241D] transition-colors hover:bg-[#01241D]/10"
+                      >
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                        View
+                      </button>
+                      {canBookEnquiry(enquiry) ? (
+                        <button
+                          type="button"
+                          onClick={() => handleBookNow(enquiry)}
+                          disabled={bookingId === enquiry.id}
+                          className="inline-flex min-h-9 items-center justify-center gap-2 rounded-[10px] bg-[#01241D] px-3 font-inter text-[13px] font-semibold text-white transition-colors hover:bg-[#C07C22] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          <CalendarCheck2 className="h-4 w-4" aria-hidden="true" />
+                          {bookingId === enquiry.id ? "Booking..." : "Book Now"}
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ))}
+
+              {filteredEnquiries.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="border-b border-[#edf1ee] px-4 py-10 text-center font-inter text-sm font-medium text-[#68746e]"
+                  >
+                    {loadStatus === "loading" ? "Loading enquiries..." : "No enquiries found."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -226,6 +296,7 @@ export default function AdminEnquiriesPage() {
                   fill
                   sizes="64px"
                   className="object-cover"
+                  unoptimized={isUnoptimizedImage(selectedEnquiry.vendorImage)}
                 />
               </span>
               <div>
@@ -240,10 +311,12 @@ export default function AdminEnquiriesPage() {
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <DetailItem label="Event" value={selectedEnquiry.event} />
+            <DetailItem label="Event Type" value={selectedEnquiry.eventType} />
+            <DetailItem label="Package" value={selectedEnquiry.packageName} />
             <DetailItem label="Service" value={selectedEnquiry.service} />
             <DetailItem label="Event Date" value={selectedEnquiry.eventDate} />
             <DetailItem label="Submitted" value={selectedEnquiry.submitted} />
+            <DetailItem label="Responded" value={selectedEnquiry.respondedAt} />
             <DetailItem label="Status" value={selectedEnquiry.status} />
           </div>
 
@@ -257,7 +330,17 @@ export default function AdminEnquiriesPage() {
             </p>
           </div>
 
-          <div className="mt-6 flex justify-end">
+          <div className="mt-4 rounded-[12px] bg-emerald-50 p-4">
+            <p className="flex items-center gap-2 font-inter text-[13px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+              <MessageSquareText className="h-4 w-4" aria-hidden="true" />
+              Vendor Response
+            </p>
+            <p className="mt-2 font-inter text-[15px] leading-7 text-emerald-950">
+              {selectedEnquiry.vendorResponse}
+            </p>
+          </div>
+
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setSelectedEnquiry(null)}
@@ -265,11 +348,106 @@ export default function AdminEnquiriesPage() {
             >
               Close
             </button>
+            {canBookEnquiry(selectedEnquiry) ? (
+              <button
+                type="button"
+                onClick={() => handleBookNow(selectedEnquiry)}
+                disabled={bookingId === selectedEnquiry.id}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-[#C07C22] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#01241D] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                <CalendarCheck2 className="h-4 w-4" aria-hidden="true" />
+                {bookingId === selectedEnquiry.id ? "Booking..." : "Book Now"}
+              </button>
+            ) : null}
           </div>
         </Modal>
       ) : null}
     </div>
   );
+}
+
+function mapCustomerEnquiry(enquiry: CustomerEnquiry): Enquiry {
+  const details = getEnquiryDetails(enquiry.message);
+  const vendorProfile = enquiry.vendor?.vendorProfile;
+
+  return {
+    id: enquiry.id,
+    vendor: vendorProfile?.vendorName ?? enquiry.vendor?.name ?? enquiry.vendor?.email ?? "Vendor",
+    vendorType: vendorProfile?.category ?? "Vendor",
+    vendorImage: vendorProfile?.imageUrl ?? "/images/profile-2.png",
+    eventType: details.eventType ?? "Not provided",
+    packageName: enquiry.packageName ?? details.packageName ?? "Custom quote",
+    service: details.service ?? details.vendor ?? "Quote request",
+    eventDate: details.eventDate ?? "Not provided",
+    submitted: formatDate(enquiry.createdAt),
+    status: mapStatus(enquiry.status, enquiry.vendorResponse),
+    requirement: details.requirements ?? details.customerRequest ?? enquiry.message,
+    vendorResponse: enquiry.vendorResponse ?? "No vendor response yet.",
+    respondedAt: enquiry.respondedAt ? formatDate(enquiry.respondedAt) : "Not replied yet",
+  };
+}
+
+function getEnquiryDetails(message: string) {
+  return {
+    service: getMessageField(message, "Service"),
+    vendor: getMessageField(message, "Vendor"),
+    packageName: getMessageField(message, "Package"),
+    eventType: getMessageField(message, "Event Type"),
+    eventDate: getMessageField(message, "Event Date"),
+    requirements: getMessageField(message, "Requirements"),
+    customerRequest: getCustomerRequest(message),
+  };
+}
+
+function getMessageField(message: string, label: string) {
+  const line = message
+    .split("\n")
+    .find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+
+  return line?.replace(new RegExp(`^${label}:\\s*`, "i"), "").trim() || undefined;
+}
+
+function getCustomerRequest(message: string) {
+  const marker = "Customer request:";
+  const markerIndex = message.toLowerCase().indexOf(marker.toLowerCase());
+
+  if (markerIndex === -1) {
+    return undefined;
+  }
+
+  return message.slice(markerIndex + marker.length).trim() || undefined;
+}
+
+function mapStatus(status: string, vendorResponse: string | null): EnquiryStatus {
+  if (status.toLowerCase() === "booked") {
+    return "Booked";
+  }
+
+  if (vendorResponse || status.toLowerCase() === "replied") {
+    return "Replied";
+  }
+
+  if (status.toLowerCase() === "closed") {
+    return "Closed";
+  }
+
+  return "New";
+}
+
+function canBookEnquiry(enquiry: Enquiry) {
+  return enquiry.status === "Replied" && enquiry.vendorResponse !== "No vendor response yet.";
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function isUnoptimizedImage(src: string) {
+  return src.startsWith("blob:") || src.startsWith("data:");
 }
 
 function TableCell({ children }: { children: ReactNode }) {
@@ -283,7 +461,7 @@ function TableCell({ children }: { children: ReactNode }) {
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-[10px] border border-[#dfe7e2] p-4">
-      <p className="font-inter text-[14px] font-medium captialize tracking-[0.14em] text-[#000]">
+      <p className="font-inter text-[14px] font-medium capitalize tracking-[0.14em] text-[#000]">
         {label}
       </p>
       <p className="mt-1 font-inter text-[14px] font-medium text-gray-700/50">
@@ -299,7 +477,9 @@ function StatusBadge({ status }: { status: EnquiryStatus }) {
       ? "bg-rose-50 text-rose-700"
       : status === "Replied"
         ? "bg-blue-50 text-blue-700"
-        : "bg-gray-100 text-gray-500";
+        : status === "Booked"
+          ? "bg-emerald-50 text-emerald-700"
+          : "bg-gray-100 text-gray-500";
 
   return (
     <span className={`whitespace-nowrap rounded-full px-2.5 py-1 font-inter text-[11px] font-semibold ${className}`}>
@@ -338,4 +518,3 @@ function Modal({
     </div>
   );
 }
-

@@ -1,9 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Eye, Search, SlidersHorizontal, X } from "lucide-react";
+import { getAdminSession } from "@/lib/admin-session";
+import { listAdminBookings, type AdminEnquiry } from "@/lib/auth";
 
 type BookingStatus = "Confirmed" | "Completed" | "Pending";
 
@@ -17,48 +19,40 @@ type Booking = {
   status: BookingStatus;
   amount: string;
   location: string;
+  packageName: string;
+  requirement: string;
 };
 
-const bookings: Booking[] = [
-  {
-    id: "BK-1024",
-    customer: "Ayesha Khan",
-    customerImage: "/images/profile-2.png",
-    vendor: "Royal Moments Photography",
-    event: "Sharma Wedding",
-    eventDate: "12 Sep 2026",
-    status: "Confirmed",
-    amount: "GBP 1,500",
-    location: "Mayfair, London",
-  },
-  {
-    id: "BK-1025",
-    customer: "Rohan Mehta",
-    customerImage: "/images/couple.png",
-    vendor: "Prime Venue Collection",
-    event: "Engagement Celebration",
-    eventDate: "18 Sep 2026",
-    status: "Completed",
-    amount: "GBP 2,200",
-    location: "Manchester",
-  },
-  {
-    id: "BK-1026",
-    customer: "Sara Malik",
-    customerImage: "/images/cm-2.png",
-    vendor: "Signature Flavours Catering",
-    event: "Birthday Celebration",
-    eventDate: "02 Oct 2026",
-    status: "Pending",
-    amount: "GBP 4,200",
-    location: "Bristol",
-  },
-];
-
 export default function AdminBookingsPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [query, setQuery] = useState("");
   const [filterBy, setFilterBy] = useState("all");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [status, setStatus] = useState<"loading" | "idle" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const session = getAdminSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Admin login is required to load bookings.");
+      });
+      return;
+    }
+
+    void listAdminBookings(session.token)
+      .then((result) => {
+        setBookings(result.bookings.map(mapAdminBooking));
+        setStatus("idle");
+        setMessage("");
+      })
+      .catch((error) => {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load bookings.");
+      });
+  }, []);
 
   const filteredBookings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -70,6 +64,7 @@ export default function AdminBookingsPage() {
         booking.vendor,
         booking.event,
         booking.eventDate,
+        booking.packageName,
         booking.status,
       ]
         .join(" ")
@@ -80,7 +75,7 @@ export default function AdminBookingsPage() {
 
       return matchesQuery && matchesFilter;
     });
-  }, [filterBy, query]);
+  }, [bookings, filterBy, query]);
 
   return (
     <div className="space-y-7">
@@ -89,7 +84,7 @@ export default function AdminBookingsPage() {
           Bookings
         </h2>
         <p className="mt-3 max-w-2xl font-inter text-[16px] leading-7 text-[#68746e]">
-          Track platform bookings by customer, vendor, event, date, and status.
+          Track real booked enquiries by customer, vendor, event, date, and status.
         </p>
       </section>
 
@@ -102,12 +97,23 @@ export default function AdminBookingsPage() {
         options={["Confirmed", "Completed", "Pending"]}
       />
 
+      {message ? (
+        <section
+          className={`rounded-[12px] px-4 py-3 font-inter text-sm font-semibold ${
+            status === "error" ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+          }`}
+          aria-live="polite"
+        >
+          {message}
+        </section>
+      ) : null}
+
       <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left">
+          <table className="w-full min-w-[1080px] border-separate border-spacing-0 text-left">
             <thead>
               <tr className="bg-[#f5f7f4]">
-                {["Booking Id", "Customer", "Vendor", "Event", "Event Date", "Status", "Action"].map((heading) => (
+                {["Booking Id", "Customer", "Vendor", "Event", "Package", "Event Date", "Status", "Action"].map((heading) => (
                   <TableHead key={heading}>{heading}</TableHead>
                 ))}
               </tr>
@@ -115,12 +121,13 @@ export default function AdminBookingsPage() {
             <tbody>
               {filteredBookings.map((booking) => (
                 <tr key={booking.id}>
-                  <TableCell>{booking.id}</TableCell>
+                  <TableCell>{formatBookingId(booking.id)}</TableCell>
                   <td className="border-b border-[#edf1ee] px-4 py-3">
                     <ProfileCell image={booking.customerImage} name={booking.customer} detail="Customer" />
                   </td>
                   <TableCell>{booking.vendor}</TableCell>
                   <TableCell>{booking.event}</TableCell>
+                  <TableCell>{booking.packageName}</TableCell>
                   <TableCell>{booking.eventDate}</TableCell>
                   <td className="border-b border-[#edf1ee] px-4 py-3">
                     <StatusBadge status={booking.status} />
@@ -130,6 +137,17 @@ export default function AdminBookingsPage() {
                   </td>
                 </tr>
               ))}
+
+              {filteredBookings.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="border-b border-[#edf1ee] px-4 py-10 text-center font-inter text-sm font-medium text-[#68746e]"
+                  >
+                    {status === "loading" ? "Loading bookings..." : "No bookings found."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -146,19 +164,80 @@ export default function AdminBookingsPage() {
             />
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <DetailItem label="Booking Id" value={selectedBooking.id} />
+            <DetailItem label="Booking Id" value={formatBookingId(selectedBooking.id)} />
             <DetailItem label="Vendor" value={selectedBooking.vendor} />
             <DetailItem label="Event" value={selectedBooking.event} />
+            <DetailItem label="Package" value={selectedBooking.packageName} />
             <DetailItem label="Event Date" value={selectedBooking.eventDate} />
             <DetailItem label="Location" value={selectedBooking.location} />
             <DetailItem label="Amount" value={selectedBooking.amount} />
             <DetailItem label="Status" value={selectedBooking.status} />
+          </div>
+          <div className="mt-4 rounded-[12px] border border-[#dfe7e2] p-4">
+            <p className="font-inter text-[14px] font-medium capitalize tracking-[0.14em] text-black">
+              Requirement
+            </p>
+            <p className="mt-2 font-inter text-[15px] leading-7 text-gray-700/70">
+              {selectedBooking.requirement}
+            </p>
           </div>
           <ModalClose onClick={() => setSelectedBooking(null)} />
         </Modal>
       ) : null}
     </div>
   );
+}
+
+function mapAdminBooking(enquiry: AdminEnquiry): Booking {
+  const details = getEnquiryDetails(enquiry.message);
+
+  return {
+    id: enquiry.id,
+    customer: enquiry.customer.name,
+    customerImage: "/images/profile-2.png",
+    vendor: enquiry.vendor.vendorName,
+    event: details.eventType ?? "Booked event",
+    eventDate: details.eventDate ?? "Not provided",
+    status: "Confirmed",
+    amount: "Confirmed by vendor response",
+    location: details.location ?? "Not provided",
+    packageName: enquiry.packageName ?? details.packageName ?? "Custom quote",
+    requirement: details.requirements ?? details.customerRequest ?? enquiry.message,
+  };
+}
+
+function getEnquiryDetails(message: string) {
+  return {
+    packageName: getMessageField(message, "Package"),
+    eventType: getMessageField(message, "Event Type"),
+    eventDate: getMessageField(message, "Event Date"),
+    location: getMessageField(message, "Location"),
+    requirements: getMessageField(message, "Requirements"),
+    customerRequest: getCustomerRequest(message),
+  };
+}
+
+function getMessageField(message: string, label: string) {
+  const line = message
+    .split("\n")
+    .find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+
+  return line?.replace(new RegExp(`^${label}:\\s*`, "i"), "").trim() || undefined;
+}
+
+function getCustomerRequest(message: string) {
+  const marker = "Customer request:";
+  const markerIndex = message.toLowerCase().indexOf(marker.toLowerCase());
+
+  if (markerIndex === -1) {
+    return undefined;
+  }
+
+  return message.slice(markerIndex + marker.length).trim() || undefined;
+}
+
+function formatBookingId(id: string) {
+  return `BK-${id.slice(-6).toUpperCase()}`;
 }
 
 function SearchFilter({
@@ -272,8 +351,8 @@ function ModalClose({ onClick }: { onClick: () => void }) {
 
 function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 px-5 py-8">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[16px] bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/45 px-5 py-8 sm:py-10">
+      <div className="my-auto max-h-[calc(100vh-4rem)] w-full max-w-2xl overflow-y-auto rounded-[16px] bg-white p-6 shadow-2xl">
         <div className="mb-6 flex items-start justify-between gap-4">
           <h2 className="font-inter text-[22px] font-semibold text-[#16231f]">{title}</h2>
           <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f7f4] text-[#0D5B46]" aria-label={`Close ${title}`}>

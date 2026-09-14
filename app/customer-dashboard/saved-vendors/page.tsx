@@ -1,19 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import VendorCard from "@/components/vendor/directory/vendor-card";
-import { vendors } from "@/data/vendor-data";
-
-const initialSavedVendors = vendors.slice(0, 6);
+import {
+  listSavedVendors,
+  removeVendorFromShortlist,
+  type SavedVendor,
+} from "@/lib/customer";
+import { getCustomerProfileSession } from "@/lib/customer-session";
 
 export default function SavedVendorsPage() {
-  const [savedVendors, setSavedVendors] = useState(initialSavedVendors);
+  const [savedVendors, setSavedVendors] = useState<SavedVendor[]>([]);
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
 
-  const removeSavedVendor = (vendorId: number) => {
-    setSavedVendors((currentVendors) =>
-      currentVendors.filter((vendor) => vendor.id !== vendorId),
+  useEffect(() => {
+    const session = getCustomerProfileSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Please login as a customer to view saved vendors.");
+      });
+      return;
+    }
+
+    void Promise.resolve()
+      .then(() => {
+        setStatus("loading");
+        return listSavedVendors(session);
+      })
+      .then((result) => {
+        setSavedVendors(result.savedVendors);
+        setStatus("success");
+        setMessage("");
+      })
+      .catch((error) => {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load saved vendors.");
+      });
+  }, []);
+
+  const filteredVendors = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return savedVendors;
+    }
+
+    return savedVendors.filter((vendor) =>
+      [vendor.name, vendor.category, vendor.location]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery)
     );
+  }, [query, savedVendors]);
+
+  const removeSavedVendor = async (vendorId: string) => {
+    const session = getCustomerProfileSession();
+
+    if (!session?.token) {
+      setStatus("error");
+      setMessage("Please login as a customer to update saved vendors.");
+      return;
+    }
+
+    try {
+      await removeVendorFromShortlist(vendorId, session);
+      setSavedVendors((currentVendors) =>
+        currentVendors.filter((vendor) => vendor.id !== vendorId)
+      );
+      setMessage("Vendor removed from saved vendors.");
+      setStatus("success");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to remove saved vendor.");
+    }
   };
 
   return (
@@ -29,7 +94,12 @@ export default function SavedVendorsPage() {
               their profiles when you are ready to compare details.
             </p>
           </div>
-        
+          <Link
+            href="/vendor"
+            className="inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[#003224] px-5 font-inter text-sm font-semibold text-white"
+          >
+            Browse Vendors
+          </Link>
         </div>
       </section>
 
@@ -39,6 +109,8 @@ export default function SavedVendorsPage() {
             <Search className="h-5 w-5 text-[#0D5B46]" aria-hidden="true" />
             <input
               type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
               placeholder="Search saved vendors"
               className="w-full bg-transparent font-inter text-sm text-[#16231f] outline-none placeholder:text-[#68746e]"
             />
@@ -63,24 +135,58 @@ export default function SavedVendorsPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {savedVendors.map((vendor) => (
-            <VendorCard
-              key={vendor.id}
-              vendor={vendor}
-              action={
-                <button
-                  type="button"
-                  onClick={() => removeSavedVendor(vendor.id)}
-                  className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[#b42318] bg-transparent px-3 font-inter text-[14px] font-semibold text-[#b42318] transition-colors hover:bg-[#b42318] hover:text-white"
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  Remove
-                </button>
-              }
-            />
-          ))}
-        </div>
+        {message ? (
+          <p
+            className={`mb-4 rounded-[10px] px-4 py-3 font-inter text-sm font-semibold ${
+              status === "error"
+                ? "bg-rose-50 text-rose-700"
+                : "bg-emerald-50 text-emerald-700"
+            }`}
+            aria-live="polite"
+          >
+            {message}
+          </p>
+        ) : null}
+
+        {status === "loading" ? (
+          <p className="py-12 text-center font-inter text-sm font-semibold text-[#68746e]">
+            Loading saved vendors...
+          </p>
+        ) : filteredVendors.length ? (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredVendors.map((vendor) => (
+              <VendorCard
+                key={vendor.id}
+                vendor={vendor}
+                action={
+                  <button
+                    type="button"
+                    onClick={() => removeSavedVendor(vendor.id)}
+                    className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-[#b42318] bg-transparent px-3 font-inter text-[14px] font-semibold text-[#b42318] transition-colors hover:bg-[#b42318] hover:text-white"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    Remove
+                  </button>
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-[12px] border border-dashed border-brand-line px-5 py-12 text-center">
+            <h4 className="font-pt-serif text-[26px] font-normal text-[#003224]">
+              No saved vendors yet
+            </h4>
+            <p className="mx-auto mt-2 max-w-md font-inter text-sm leading-6 text-[#68746e]">
+              Browse the vendor directory and open a vendor profile to save it with the heart button.
+            </p>
+            <Link
+              href="/vendor"
+              className="mt-5 inline-flex min-h-11 items-center justify-center rounded-[8px] bg-[#003224] px-5 font-inter text-sm font-semibold text-white"
+            >
+              Browse Vendors
+            </Link>
+          </div>
+        )}
       </section>
     </div>
   );

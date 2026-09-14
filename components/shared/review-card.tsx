@@ -27,7 +27,7 @@ export default function ReviewCard({ review }: ReviewCardProps) {
             size={15}
             className={
               index < Math.round(review.rating)
-                ? "fill-[#D79D42]"
+                ? "text-[#D79D42]"
                 : "text-brand-line"
             }
           />

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bell,
   ChartLine,
   CalendarCheck2,
   Images,
@@ -16,6 +17,7 @@ import {
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/vendor-dashboard", icon: LayoutDashboard },
+  { label: "Notifications", href: "/vendor-dashboard/notifications", icon: Bell },
   {
     label: "Enquiries",
     href: "/vendor-dashboard/enquires",

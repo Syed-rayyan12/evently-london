@@ -1,14 +1,18 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Eye, Search, SlidersHorizontal, X } from "lucide-react";
+import type { AccountApprovalStatus, AdminUsersResult } from "@/lib/auth";
+import { listAdminUsers } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-session";
 
 type UserStatus = "Active" | "Inactive" | "Blocked";
 
 type Customer = {
-  id: number;
+  id: string;
   name: string;
   image: string;
   joinDate: string;
@@ -20,61 +24,41 @@ type Customer = {
   status: UserStatus;
 };
 
-const customers: Customer[] = [
-  {
-    id: 1,
-    name: "Ayesha Khan",
-    image: "/images/profile-2.png",
-    joinDate: "12 Jan 2026",
-    email: "ayesha@example.com",
-    events: 3,
-    savedVendors: 18,
-    enquiries: 9,
-    bookings: 4,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Rohan Mehta",
-    image: "/images/couple.png",
-    joinDate: "04 Mar 2026",
-    email: "rohan@example.com",
-    events: 2,
-    savedVendors: 11,
-    enquiries: 6,
-    bookings: 2,
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Sara Malik",
-    image: "/images/cm-2.png",
-    joinDate: "19 May 2026",
-    email: "sara@example.com",
-    events: 1,
-    savedVendors: 7,
-    enquiries: 4,
-    bookings: 1,
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    name: "Daniel Carter",
-    image: "/images/cm-3.png",
-    joinDate: "22 Jun 2026",
-    email: "daniel@example.com",
-    events: 4,
-    savedVendors: 21,
-    enquiries: 12,
-    bookings: 5,
-    status: "Blocked",
-  },
-];
-
 export default function AdminUsersPage() {
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [query, setQuery] = useState("");
   const [filterBy, setFilterBy] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  async function loadUsers(token: string) {
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const result = await listAdminUsers(token);
+      setCustomers(result.users.map(mapUserToCustomer));
+      setStatus("success");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to load users");
+    }
+  }
+
+  useEffect(() => {
+    const session = getAdminSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Admin login is required to view users.");
+      });
+      return;
+    }
+
+    void Promise.resolve().then(() => loadUsers(session.token));
+  }, []);
 
   const filteredCustomers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -94,7 +78,7 @@ export default function AdminUsersPage() {
 
       return matchesQuery && matchesFilter;
     });
-  }, [filterBy, query]);
+  }, [customers, filterBy, query]);
 
   return (
     <div className="space-y-7">
@@ -135,6 +119,15 @@ export default function AdminUsersPage() {
           </label>
         </div>
       </section>
+
+      {message ? (
+        <section className="rounded-[12px] bg-rose-50 px-4 py-3 font-inter text-sm font-semibold text-rose-700">
+          {message}
+          <Link href="/login" className="ml-2 underline">
+            Go to admin login
+          </Link>
+        </section>
+      ) : null}
 
       <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
@@ -192,6 +185,17 @@ export default function AdminUsersPage() {
                   </td>
                 </tr>
               ))}
+
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="border-b border-[#edf1ee] px-4 py-10 text-center font-inter text-sm font-medium text-[#68746e]"
+                  >
+                    {status === "loading" ? "Loading users..." : "No users found."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -224,6 +228,37 @@ export default function AdminUsersPage() {
       ) : null}
     </div>
   );
+}
+
+function mapUserToCustomer(user: AdminUsersResult["users"][number]): Customer {
+  return {
+    id: user.id,
+    name: user.name,
+    image: "/images/profile-2.png",
+    joinDate: new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    }).format(new Date(user.createdAt)),
+    email: user.email,
+    events: 0,
+    savedVendors: user._count?.customerSavedVendors ?? 0,
+    enquiries: user._count?.customerEnquiries ?? 0,
+    bookings: 0,
+    status: mapUserStatus(user.approvalStatus)
+  };
+}
+
+function mapUserStatus(status: AccountApprovalStatus): UserStatus {
+  if (status === "APPROVED") {
+    return "Active";
+  }
+
+  if (status === "SUSPENDED") {
+    return "Blocked";
+  }
+
+  return "Inactive";
 }
 
 function ProfileCell({

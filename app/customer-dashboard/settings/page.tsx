@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Mail,
   Pencil,
@@ -11,6 +12,18 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import {
+  getCustomerProfile,
+  updateCustomerPassword,
+  updateCustomerProfile,
+  type AuthUser,
+} from "@/lib/auth";
+import {
+  clearCustomerProfileSession,
+  getCustomerProfileSession,
+  saveCustomerProfileSession,
+  type CustomerProfileSession,
+} from "@/lib/customer-session";
 
 const initialProfile = {
   image: "/images/profile-2.png",
@@ -19,6 +32,38 @@ const initialProfile = {
   phone: "+44 7700 900321",
 };
 
+type CustomerProfile = Pick<CustomerProfileSession, "image" | "fullName" | "email" | "phone">;
+
+type PasswordForm = {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+};
+
+function getInitialProfile(): CustomerProfile {
+  const session = getCustomerProfileSession();
+
+  if (!session) {
+    return initialProfile;
+  }
+
+  return {
+    image: session.image,
+    fullName: session.fullName,
+    email: session.email,
+    phone: session.phone,
+  };
+}
+
+function createProfileFromUser(user: AuthUser, image = "/images/profile-2.png"): CustomerProfile {
+  return {
+    image,
+    fullName: user.name,
+    email: user.email,
+    phone: user.phone ?? "",
+  };
+}
+
 const profileFields = [
   { key: "fullName", label: "Full Name", icon: UserRound },
   { key: "email", label: "Email", icon: Mail },
@@ -26,20 +71,160 @@ const profileFields = [
 ] as const;
 
 export default function AdminSettingsPage() {
-  const [profile, setProfile] = useState(initialProfile);
-  const [editProfile, setEditProfile] = useState(initialProfile);
+  const router = useRouter();
+  const [profile, setProfile] = useState<CustomerProfile>(getInitialProfile);
+  const [editProfile, setEditProfile] = useState<CustomerProfile>(getInitialProfile);
+  const [profileStatus, setProfileStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [profileMessage, setProfileMessage] = useState("");
+  const [passwordForm, setPasswordForm] = useState<PasswordForm>({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [passwordStatus, setPasswordStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [passwordMessage, setPasswordMessage] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPasswordOpen, setIsPasswordOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
+  useEffect(() => {
+    let active = true;
+    const session = getCustomerProfileSession();
+
+    if (!session?.token) {
+      setProfileStatus("error");
+      setProfileMessage("Please login before viewing your profile.");
+      router.replace("/");
+      return;
+    }
+
+    setProfileStatus("loading");
+    setProfileMessage("Loading profile...");
+
+    getCustomerProfile(session)
+      .then((result) => {
+        if (!active) {
+          return;
+        }
+
+        const nextProfile = createProfileFromUser(result.user, session.image);
+
+        saveCustomerProfileSession(result.user, session.token);
+        setProfile(nextProfile);
+        setEditProfile(nextProfile);
+        setProfileStatus("idle");
+        setProfileMessage("");
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        clearCustomerProfileSession();
+        setProfileStatus("error");
+        setProfileMessage(error instanceof Error ? error.message : "Unable to load profile");
+        router.replace("/");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
   const openEditModal = () => {
     setEditProfile(profile);
+    setProfileStatus("idle");
+    setProfileMessage("");
     setIsEditOpen(true);
   };
 
-  const saveProfile = () => {
-    setProfile(editProfile);
-    setIsEditOpen(false);
+  const saveProfile = async () => {
+    const session = getCustomerProfileSession();
+
+    if (!session?.id || !session.token) {
+      setProfileStatus("error");
+      setProfileMessage("Please login before updating your profile.");
+      return;
+    }
+
+    setProfileStatus("loading");
+    setProfileMessage("");
+
+    try {
+      const phone = editProfile.phone.trim();
+      const result = await updateCustomerProfile(
+        {
+          fullName: editProfile.fullName.trim(),
+          email: editProfile.email.trim(),
+          ...(phone ? { phone } : {})
+        },
+        session
+      );
+      const nextProfile = createProfileFromUser(result.user, editProfile.image);
+
+      saveCustomerProfileSession(result.user, session.token);
+      setProfile(nextProfile);
+      setEditProfile(nextProfile);
+      setProfileStatus("success");
+      setProfileMessage("Profile updated successfully.");
+      setIsEditOpen(false);
+    } catch (error) {
+      setProfileStatus("error");
+      setProfileMessage(error instanceof Error ? error.message : "Unable to update profile");
+    }
+  };
+
+  const openPasswordModal = () => {
+    setPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+    setPasswordStatus("idle");
+    setPasswordMessage("");
+    setIsPasswordOpen(true);
+  };
+
+  const changePassword = async () => {
+    const session = getCustomerProfileSession();
+
+    if (!session?.id || !session.token) {
+      setPasswordStatus("error");
+      setPasswordMessage("Please login before changing your password.");
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordStatus("error");
+      setPasswordMessage("New password and confirm password must match.");
+      return;
+    }
+
+    setPasswordStatus("loading");
+    setPasswordMessage("");
+
+    try {
+      const result = await updateCustomerPassword(
+        {
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        },
+        session
+      );
+
+      saveCustomerProfileSession(result.user, session.token);
+      setPasswordStatus("success");
+      setPasswordMessage("Password changed successfully.");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      setIsPasswordOpen(false);
+    } catch (error) {
+      setPasswordStatus("error");
+      setPasswordMessage(error instanceof Error ? error.message : "Unable to change password");
+    }
   };
 
   const updateProfileImage = (file: File | undefined) => {
@@ -97,7 +282,7 @@ export default function AdminSettingsPage() {
             </button>
             <button
               type="button"
-              onClick={() => setIsPasswordOpen(true)}
+              onClick={openPasswordModal}
               className="inline-flex min-h-10 items-center justify-center rounded-[10px] border border-gray-300 bg-gray-100 px-5 font-inter text-[14px] font-semibold text-gray-500 transition-colors hover:border-[#0D5B46] hover:bg-white hover:text-[#0D5B46]"
             >
               Change Password
@@ -127,6 +312,10 @@ export default function AdminSettingsPage() {
             );
           })}
         </div>
+
+        {profileMessage && !isEditOpen ? (
+          <StatusMessage status={profileStatus} message={profileMessage} />
+        ) : null}
 
         {/* <div className="mt-6 flex flex-col gap-4 border-t border-[#edf1ee] pt-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
@@ -212,6 +401,9 @@ export default function AdminSettingsPage() {
               </label>
             ))}
           </div>
+          {profileMessage ? (
+            <StatusMessage status={profileStatus} message={profileMessage} />
+          ) : null}
           <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
@@ -223,9 +415,10 @@ export default function AdminSettingsPage() {
             <button
               type="button"
               onClick={saveProfile}
+              disabled={profileStatus === "loading"}
               className="rounded-md bg-[#01241D] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#C07C22]"
             >
-              Save Profile
+              {profileStatus === "loading" ? "Saving..." : "Save Profile"}
             </button>
           </div>
         </ProfileModal>
@@ -237,20 +430,31 @@ export default function AdminSettingsPage() {
           onClose={() => setIsPasswordOpen(false)}
         >
           <div className="space-y-4">
-            {["Current Password", "New Password", "Confirm Password"].map(
-              (label) => (
-                <label key={label} className="block">
-                  <span className="font-inter text-[13px] font-semibold text-[#16231f]">
-                    {label}
-                  </span>
-                  <input
-                    type="password"
-                    className="mt-2 h-11 w-full rounded-[10px] border border-[#dfe7e2] bg-[#fbfcfa] px-4 font-inter text-[14px] text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]"
-                  />
-                </label>
-              ),
-            )}
+            <PasswordInput
+              label="Current Password"
+              value={passwordForm.currentPassword}
+              onChange={(value) =>
+                setPasswordForm((current) => ({ ...current, currentPassword: value }))
+              }
+            />
+            <PasswordInput
+              label="New Password"
+              value={passwordForm.newPassword}
+              onChange={(value) =>
+                setPasswordForm((current) => ({ ...current, newPassword: value }))
+              }
+            />
+            <PasswordInput
+              label="Confirm Password"
+              value={passwordForm.confirmPassword}
+              onChange={(value) =>
+                setPasswordForm((current) => ({ ...current, confirmPassword: value }))
+              }
+            />
           </div>
+          {passwordMessage ? (
+            <StatusMessage status={passwordStatus} message={passwordMessage} />
+          ) : null}
           <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
@@ -261,10 +465,11 @@ export default function AdminSettingsPage() {
             </button>
             <button
               type="button"
-              onClick={() => setIsPasswordOpen(false)}
+              onClick={changePassword}
+              disabled={passwordStatus === "loading"}
               className="rounded-md bg-[#01241D] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#C07C22]"
             >
-              Change Password
+              {passwordStatus === "loading" ? "Changing..." : "Change Password"}
             </button>
           </div>
         </ProfileModal>
@@ -329,3 +534,47 @@ function ProfileModal({
   );
 }
 
+function PasswordInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="block">
+      <span className="font-inter text-[13px] font-semibold text-[#16231f]">
+        {label}
+      </span>
+      <input
+        type="password"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-2 h-11 w-full rounded-[10px] border border-[#dfe7e2] bg-[#fbfcfa] px-4 font-inter text-[14px] text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]"
+      />
+    </label>
+  );
+}
+
+function StatusMessage({
+  status,
+  message,
+}: {
+  status: "idle" | "loading" | "success" | "error";
+  message: string;
+}) {
+  const className =
+    status === "success"
+      ? "bg-emerald-50 text-emerald-700"
+      : status === "loading"
+        ? "bg-amber-50 text-amber-700"
+        : "bg-red-50 text-red-700";
+
+  return (
+    <p className={`mt-4 rounded-md px-3 py-2 font-inter text-sm ${className}`} aria-live="polite">
+      {message}
+    </p>
+  );
+}

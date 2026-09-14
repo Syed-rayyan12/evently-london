@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Pagination from "@/components/shared/pagination";
+import { listPublicVendors, type PublicVendor } from "@/lib/public-vendors";
 import Filters from "./filters";
 import SearchBar from "./search-bar";
 import type { VendorSearchValues } from "./search-bar";
 import VendorGrid from "./vendor-grid";
-import { vendors } from "@/data/vendor-data";
 
-const ALL_VENDORS = vendors;
 const FILTER_CATEGORIES = [
   "Photography",
   "Venue",
@@ -20,16 +19,27 @@ const FILTER_CATEGORIES = [
   "Henna Artist",
 ];
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 20;
+const DEFAULT_PRICE_MAX = 5000;
 
 export default function VendorDirectory() {
+  const [vendors, setVendors] = useState<PublicVendor[]>([]);
+  const [availableCategories, setAvailableCategories] = useState(FILTER_CATEGORIES);
   const [searchTerm, setSearchTerm] = useState<VendorSearchValues>({
     query: "",
     location: "",
   });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState({ minPrice: 0, maxPrice: DEFAULT_PRICE_MAX });
+  const [availablePriceRange, setAvailablePriceRange] = useState({
+    minPrice: 0,
+    maxPrice: DEFAULT_PRICE_MAX
+  });
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalVendors, setTotalVendors] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [isGridLoading, setIsGridLoading] = useState(false);
+  const [message, setMessage] = useState("");
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -53,30 +63,54 @@ export default function VendorDirectory() {
     }, 450);
   };
 
-  const filteredVendors = useMemo(() => {
-    return ALL_VENDORS.filter((vendor) => {
-      const matchesQuery =
-        !searchTerm.query ||
-        vendor.name.toLowerCase().includes(searchTerm.query.toLowerCase()) ||
-        vendor.category.toLowerCase().includes(searchTerm.query.toLowerCase());
-      const matchesLocation =
-        !searchTerm.location ||
-        vendor.location
-          .toLowerCase()
-          .includes(searchTerm.location.toLowerCase());
-      const matchesCategory =
-        selectedCategories.length === 0 ||
-        selectedCategories.includes(vendor.category);
+  useEffect(() => {
+    let active = true;
 
-      return matchesQuery && matchesLocation && matchesCategory;
-    });
-  }, [searchTerm, selectedCategories]);
+    setIsGridLoading(true);
+    listPublicVendors({
+      page: currentPage,
+      limit: PAGE_SIZE,
+      query: searchTerm.query,
+      location: searchTerm.location,
+      category: selectedCategories,
+      minPrice: priceRange.minPrice,
+      maxPrice: priceRange.maxPrice,
+    })
+      .then((result) => {
+        if (!active) {
+          return;
+        }
 
-  const totalPages = Math.max(1, Math.ceil(filteredVendors.length / PAGE_SIZE));
-  const paginatedVendors = filteredVendors.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
-  );
+        setVendors(result.vendors);
+        setTotalPages(result.pagination.totalPages);
+        setTotalVendors(result.pagination.total);
+        setAvailableCategories(result.filters.categories.length ? result.filters.categories : FILTER_CATEGORIES);
+        setAvailablePriceRange({
+          minPrice: result.filters.priceMin,
+          maxPrice: Math.max(result.filters.priceMax, priceRange.maxPrice),
+        });
+        setMessage("");
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        setVendors([]);
+        setTotalPages(1);
+        setTotalVendors(0);
+        setMessage(error instanceof Error ? error.message : "Unable to load vendors.");
+      })
+      .finally(() => {
+        if (active) {
+          setIsGridLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [currentPage, priceRange, searchTerm, selectedCategories]);
 
   const handleSearch = (values: VendorSearchValues) => {
     showGridLoader();
@@ -87,6 +121,15 @@ export default function VendorDirectory() {
   const handleFilterChange = (nextSelected: string[]) => {
     showGridLoader();
     setSelectedCategories(nextSelected);
+    setCurrentPage(1);
+  };
+
+  const handlePriceChange = (range: { minPrice: number; maxPrice: number }) => {
+    showGridLoader();
+    setPriceRange({
+      minPrice: Math.min(range.minPrice, range.maxPrice),
+      maxPrice: Math.max(range.minPrice, range.maxPrice),
+    });
     setCurrentPage(1);
   };
 
@@ -115,14 +158,23 @@ export default function VendorDirectory() {
 
         <div className="flex flex-col gap-6 sm:flex-row items-start">
           <Filters
-            categories={FILTER_CATEGORIES}
+            categories={availableCategories}
             selected={selectedCategories}
             onChange={handleFilterChange}
+            priceMin={availablePriceRange.minPrice}
+            priceMax={availablePriceRange.maxPrice}
+            selectedMinPrice={priceRange.minPrice}
+            selectedMaxPrice={priceRange.maxPrice}
+            onPriceChange={handlePriceChange}
             />
 
           
           <div className="flex-1">
-            <VendorGrid vendors={paginatedVendors} isLoading={isGridLoading} />
+            <div className="mb-4 flex items-center justify-between gap-3 font-inter text-sm text-gray-500">
+              <p>{isGridLoading ? "Loading vendors..." : `${totalVendors} vendors found`}</p>
+              {message ? <p className="text-red-600">{message}</p> : null}
+            </div>
+            <VendorGrid vendors={vendors} isLoading={isGridLoading} />
 
             <Pagination
               currentPage={currentPage}

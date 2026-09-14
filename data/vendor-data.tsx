@@ -1,11 +1,16 @@
 export type AvailabilityStatus = "available" | "booked" | "pending" | "unavailable";
 
 export type VendorService = {
+  id?: string;
   title: string;
   description: string;
+  startingPrice?: string;
+  packages?: VendorPackage[];
 };
 
 export type VendorPackage = {
+  id?: string;
+  serviceId?: string | null;
   name: string;
   description: string;
   price: string;
@@ -50,6 +55,7 @@ export type VendorProfile = {
   reviews: VendorReview[];
   servicesOffered: VendorOfferedService[];
   availability: Record<string, AvailabilityStatus>;
+  availabilityLabels?: Record<string, string>;
 };
 
 const portfolio: VendorPortfolioImage[] = [

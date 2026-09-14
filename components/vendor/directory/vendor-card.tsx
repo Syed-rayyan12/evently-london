@@ -3,8 +3,9 @@ import { MapPin, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { VendorProfile } from "@/data/vendor-data";
+import type { PublicVendor } from "@/lib/public-vendors";
 
-export type Vendor = VendorProfile;
+export type Vendor = VendorProfile | PublicVendor;
 
 type VendorCardProps = {
   vendor: Vendor;
@@ -26,6 +27,7 @@ export default function VendorCard({
           fill
           sizes="(min-width: 1024px) 26vw, (min-width: 640px) 42vw, 90vw"
           className="object-cover"
+          unoptimized={vendor.image.startsWith("data:")}
         />
        
       </div>

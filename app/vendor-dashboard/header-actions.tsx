@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,43 +9,111 @@ import {
   ChevronDown,
   LogOut,
   MessageSquareText,
+  Star,
   Settings,
   UserRound,
   X,
 } from "lucide-react";
-
-const notifications = [
-  {
-    title: "New enquiry received",
-    detail: "Ayesha Khan requested wedding photography details.",
-    time: "5 min ago",
-    icon: MessageSquareText,
-  },
-  {
-    title: "Booking confirmed",
-    detail: "Hamza Malik confirmed the engagement event booking.",
-    time: "1 hour ago",
-    icon: CalendarCheck2,
-  },
-  {
-    title: "Profile update reminder",
-    detail: "Review your portfolio before the weekend traffic spike.",
-    time: "Today",
-    icon: Settings,
-  },
-];
+import {
+  getVendorProfile,
+  listVendorNotifications,
+  markVendorNotificationReviewed,
+  type AppNotification
+} from "@/lib/auth";
+import {
+  clearVendorProfileSession,
+  getVendorProfileSession,
+  saveVendorProfileSession,
+  type VendorProfileSession,
+} from "@/lib/vendor-session";
 
 export function HeaderActions() {
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [profile, setProfile] = useState<VendorProfileSession | null>(null);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const savingFromFetch = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+
+    function syncProfile() {
+      if (savingFromFetch.current) {
+        savingFromFetch.current = false;
+        setProfile(getVendorProfileSession());
+        return;
+      }
+
+      const session = getVendorProfileSession();
+      setProfile(session);
+
+      if (!session?.token) {
+        setNotifications([]);
+        return;
+      }
+
+      listVendorNotifications(session)
+        .then((result) => setNotifications(result.notifications))
+        .catch(() => setNotifications([]));
+
+      getVendorProfile(session)
+        .then((result) => {
+          if (!active) {
+            return;
+          }
+
+          savingFromFetch.current = true;
+          saveVendorProfileSession(result.user, session.token, result.profile);
+          setProfile(getVendorProfileSession());
+        })
+        .catch(() => {
+          if (!active) {
+            return;
+          }
+
+          clearVendorProfileSession();
+          setProfile(null);
+        });
+    }
+
+    syncProfile();
+    window.addEventListener("evently.vendor.updated", syncProfile);
+
+    return () => {
+      active = false;
+      window.removeEventListener("evently.vendor.updated", syncProfile);
+    };
+  }, []);
+
+  const displayName = profile?.vendorName || profile?.fullName || "Vendor";
+  const profileImage = profile?.image || "/images/profile-1.png";
+
+  function handleNotificationClick(notificationId: string) {
+    const session = getVendorProfileSession();
+
+    setNotifications((current) =>
+      current.filter((notification) => notification.id !== notificationId)
+    );
+
+    if (session?.token) {
+      void markVendorNotificationReviewed(notificationId, session).catch(() => {
+        void listVendorNotifications(session)
+          .then((result) => setNotifications(result.notifications))
+          .catch(() => setNotifications([]));
+      });
+    }
+  }
 
   return (
     <>
       <details className="group relative">
         <summary
-          className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full bg-white text-[#001B12] transition-colors hover:bg-[#C07C22] hover:text-white [&::-webkit-details-marker]:hidden"
+          className="relative flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full bg-white text-[#001B12] transition-colors hover:bg-[#C07C22] hover:text-white [&::-webkit-details-marker]:hidden"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" aria-hidden="true" />
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#C07C22] px-1 font-inter text-[11px] font-bold leading-none text-white">
+            {notifications.length}
+          </span>
         </summary>
         <div className="absolute right-0 mt-3 w-[330px] overflow-hidden rounded-[12px] border border-[#dfe7e2] bg-white text-[#16231f] shadow-xl">
           <div className="border-b border-[#edf1ee] px-4 py-3">
@@ -54,15 +122,17 @@ export function HeaderActions() {
             </h2>
           </div>
           <div className="max-h-[340px] overflow-y-auto">
-            {notifications.map((notification) => {
-              const Icon = notification.icon;
+            {notifications.length ? notifications.map((notification) => {
+              const Icon = getNotificationIcon(notification.kind);
 
               return (
-                <div
-                  key={notification.title}
-                  className="flex gap-3 border-b border-[#edf1ee] px-4 py-3 last:border-b-0"
+                <Link
+                  key={notification.id}
+                  href="/vendor-dashboard/notifications"
+                  onClick={() => handleNotificationClick(notification.id)}
+                  className="flex gap-3 border-b border-[#edf1ee] px-4 py-3 transition-colors hover:bg-[#f8faf9] last:border-b-0"
                 >
-                  <span className="mt-1 flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-[#0D5B46]/10 text-[#0D5B46]">
+                  <span className="mt-1 flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-[#f5f7f4] text-[#68746e]">
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <div>
@@ -72,30 +142,34 @@ export function HeaderActions() {
                     <p className="mt-1 font-inter text-[13px] leading-5 text-[#68746e]">
                       {notification.detail}
                     </p>
-                    <p className="mt-2 font-inter text-[12px] font-medium text-[#0D5B46]">
-                      {notification.time}
+                    <p className="mt-2 font-inter text-[12px] font-medium text-[#68746e]">
+                      {formatNotificationTime(notification.createdAt)}
                     </p>
                   </div>
-                </div>
+                </Link>
               );
-            })}
+            }) : (
+              <p className="px-4 py-6 text-center font-inter text-sm font-semibold text-[#68746e]">
+                No notifications yet.
+              </p>
+            )}
           </div>
         </div>
       </details>
 
-      <details className="group relative">
-        <summary className="flex h-11 cursor-pointer list-none items-center gap-3 rounded-[10px] px-3 text-[#0D5B46] shadow-sm transition-colors [&::-webkit-details-marker]:hidden">
+      <details className="group relative flex-none">
+        <summary className="flex h-11 max-w-[220px] cursor-pointer list-none items-center gap-2 rounded-[10px] px-2 text-[#0D5B46] shadow-sm transition-colors [&::-webkit-details-marker]:hidden">
           <span className="relative h-12 w-12 overflow-hidden rounded-full bg-white">
             <Image
-              src="/images/profile-1.png"
-              alt="Vendor profile"
+              src={profileImage}
+              alt={displayName}
               width={500}
               height={500}
               className="object-cover"
             />
           </span>
-          <span className="hidden font-inter text-[18px] font-normal text-white sm:block">
-            Vendor
+          <span className="hidden min-w-0 max-w-[130px] truncate font-inter text-[14px] font-normal text-white sm:block lg:max-w-[150px]">
+            {displayName}
           </span>
           <ChevronDown
             className="h-4 w-4 text-white transition-transform group-open:rotate-180"
@@ -159,6 +233,7 @@ export function HeaderActions() {
               </button>
               <Link
                 href="/"
+                onClick={clearVendorProfileSession}
                 className="inline-flex rounded-md bg-[#01241D] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#C07C22]"
               >
                 Logout
@@ -169,4 +244,25 @@ export function HeaderActions() {
       ) : null}
     </>
   );
+}
+
+function getNotificationIcon(kind: AppNotification["kind"]) {
+  if (kind === "review") {
+    return Star;
+  }
+
+  if (kind === "booking") {
+    return CalendarCheck2;
+  }
+
+  return MessageSquareText;
+}
+
+function formatNotificationTime(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
 }

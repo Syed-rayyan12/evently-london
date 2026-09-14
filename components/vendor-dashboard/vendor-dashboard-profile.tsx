@@ -1,14 +1,15 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   BriefcaseBusiness,
+  CalendarDays,
   Globe,
   Mail,
   MapPin,
-  Package,
+  Package as PackageIcon,
   Phone,
   PoundSterling,
   Star,
@@ -18,176 +19,191 @@ import {
 } from "lucide-react";
 import AvailabilityCalendar from "@/components/shared/availability";
 import type { AvailabilityStatus } from "@/data/vendor-data";
+import {
+  getVendorProfile,
+  listVendorAvailability,
+  listVendorPackages,
+  listVendorPortfolio,
+  listVendorServices,
+  updateVendorProfile,
+  upsertVendorAvailability,
+  type VendorAvailabilityEvent,
+  type VendorPackage,
+  type VendorPortfolioItem,
+  type VendorProfileDetails,
+  type VendorService,
+} from "@/lib/auth";
+import {
+  getVendorProfileSession,
+  saveVendorProfileSession,
+} from "@/lib/vendor-session";
 
-const initialVendor = {
-  name: "Royal Moments Photography",
-  status: "Active",
-  category: "Photography",
-  image: "/images/Photography.png",
-  rating: "4.9",
-  location: "London, UK",
-  startingPrice: "£1,500",
-  phone: "+44 7700 100103",
-  email: "hello@royalmoments.example.com",
-  website: "royalmoments.example.com",
-  about:
-    "Royal Moments Photography creates timeless wedding, engagement, and family celebration coverage with a calm documentary approach, refined portraits, and polished delivery for every client.",
-};
-
-const services = [
-  { name: "Wedding Photography", price: "£1,500", status: "Active" },
-  { name: "Engagement Shoot", price: "£650", status: "Active" },
-  { name: "Cinematic Videography", price: "£1,200", status: "Inactive" },
-  { name: "Albums & Prints", price: "£300", status: "Active" },
-];
-
-const packages = [
-  { name: "Essential Package", price: "£1,500" },
-  { name: "Classic Package", price: "£1,850" },
-  { name: "Premium Package", price: "£2,580" },
-];
-
-const portfolioImages = [
-  "/images/card-1.png",
-  "/images/card-2.png",
-  "/images/card-3.png",
-  "/images/card-4.png",
-  "/images/card-5.png",
-  "/images/venue.png",
-];
-
-const boxHeadingClass =
-  "font-inter text-[16px] font-semibold leading-tight text-[#16231f]";
-
-const initialAvailability: Record<string, AvailabilityStatus> = {
-  "2026-03-20": "booked",
-  "2026-03-21": "available",
-  "2026-03-22": "pending",
-  "2026-03-23": "unavailable",
-  "2026-03-27": "available",
+type ProfileViewModel = {
+  ownerName: string;
+  vendorName: string;
+  status: string;
+  category: string;
+  imageUrl: string;
+  rating: string;
+  location: string;
+  startingPrice: string;
+  phone: string;
+  email: string;
+  website: string;
+  about: string;
 };
 
 type CalendarDateDetail = {
   calendarStatus: AvailabilityStatus;
   eventName: string;
-  serviceName: string;
-  packageName: string;
-  location: string;
-  guests: string;
 };
 
-const initialCalendarDetails: Record<string, CalendarDateDetail> = {
-  "2026-03-20": {
-    calendarStatus: "booked",
-    eventName: "Wedding Event",
-    serviceName: "Wedding Photography",
-    packageName: "Premium Package",
-    location: "The Grand Hall, London",
-    guests: "180",
-  },
-  "2026-03-21": {
-    calendarStatus: "available",
-    eventName: "Available Date",
-    serviceName: "",
-    packageName: "",
-    location: "Available across London",
-    guests: "",
-  },
-  "2026-03-22": {
-    calendarStatus: "pending",
-    eventName: "Engagement Enquiry",
-    serviceName: "Engagement Shoot",
-    packageName: "Classic Package",
-    location: "Chelsea, London",
-    guests: "60",
-  },
-  "2026-03-23": {
-    calendarStatus: "unavailable",
-    eventName: "Unavailable Date",
-    serviceName: "",
-    packageName: "",
-    location: "Not available",
-    guests: "",
-  },
-  "2026-03-27": {
-    calendarStatus: "available",
-    eventName: "Available Date",
-    serviceName: "",
-    packageName: "",
-    location: "Available across London",
-    guests: "",
-  },
-};
+const fallbackImage = "/images/Photography.png";
+const boxHeadingClass = "font-inter text-[16px] font-semibold leading-tight text-[#16231f]";
+const calendarStatusOptions: AvailabilityStatus[] = ["available", "booked", "pending", "unavailable"];
 
-const calendarStatusOptions: AvailabilityStatus[] = [
-  "available",
-  "booked",
-  "pending",
-  "unavailable",
-];
+function createProfileViewModel(profile: VendorProfileDetails | null): ProfileViewModel {
+  const session = getVendorProfileSession();
+
+  return {
+    ownerName: profile?.ownerName ?? session?.ownerName ?? session?.fullName ?? "",
+    vendorName: profile?.vendorName ?? session?.vendorName ?? session?.fullName ?? "Vendor",
+    status: session?.approvalStatus === "APPROVED" ? "Active" : session?.approvalStatus ?? "Pending",
+    category: profile?.category ?? session?.category ?? "Not added",
+    imageUrl: profile?.imageUrl ?? session?.image ?? fallbackImage,
+    rating: "New",
+    location: profile?.location ?? session?.location ?? "Not added",
+    startingPrice: "Not set",
+    phone: session?.phone ?? "",
+    email: session?.email ?? "",
+    website: "",
+    about: profile?.about ?? session?.about ?? "No vendor description added yet.",
+  };
+}
+
+function createDateDetail(status: AvailabilityStatus): CalendarDateDetail {
+  return {
+    calendarStatus: status,
+    eventName: "",
+  };
+}
+
+function eventToDetail(event: VendorAvailabilityEvent): CalendarDateDetail {
+  return {
+    calendarStatus: event.status,
+    eventName: event.eventName,
+  };
+}
 
 export function VendorDashboardProfile() {
-  const [profile, setProfile] = useState(initialVendor);
-  const [editForm, setEditForm] = useState(initialVendor);
+  const [profile, setProfile] = useState<ProfileViewModel>(() => createProfileViewModel(null));
+  const [services, setServices] = useState<VendorService[]>([]);
+  const [packages, setPackages] = useState<VendorPackage[]>([]);
+  const [portfolio, setPortfolio] = useState<VendorPortfolioItem[]>([]);
+  const [calendarDetails, setCalendarDetails] = useState<Record<string, CalendarDateDetail>>({});
+  const [editForm, setEditForm] = useState<ProfileViewModel>(() => createProfileViewModel(null));
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
-  const [visibleDate, setVisibleDate] = useState(new Date(2026, 2, 1));
-  const [selectedDateKey, setSelectedDateKey] = useState("2026-03-20");
-  const [calendarStatuses, setCalendarStatuses] = useState(initialAvailability);
-  const [calendarDetails, setCalendarDetails] = useState(
-    initialCalendarDetails,
+  const [visibleDate, setVisibleDate] = useState(new Date());
+  const [selectedDateKey, setSelectedDateKey] = useState(formatDateKey(new Date()));
+  const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  const calendarStatuses = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(calendarDetails).map(([date, detail]) => [date, detail.calendarStatus]),
+      ) as Record<string, AvailabilityStatus>,
+    [calendarDetails],
   );
+
+  const calendarLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(calendarDetails).map(([date, detail]) => [date, detail.eventName]),
+      ),
+    [calendarDetails],
+  );
+
   const selectedDateDetail =
     calendarDetails[selectedDateKey] ??
-    createDateDetail(
-      calendarStatuses[selectedDateKey] ?? "available",
-    );
-  const selectedDateLabel = formatSelectedDate(selectedDateKey);
+    createDateDetail(calendarStatuses[selectedDateKey] ?? "available");
+  const selectedDateLabel = parseDateKey(selectedDateKey).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   const infoRows = [
-    { label: "Business Name", value: profile.name, icon: BriefcaseBusiness },
-    { label: "Category", value: profile.category },
+    { label: "Owner Name", value: profile.ownerName, icon: BriefcaseBusiness },
+    { label: "Business Name", value: profile.vendorName, icon: BriefcaseBusiness },
+    { label: "Category", value: profile.category, icon: PackageIcon },
     { label: "Location", value: profile.location, icon: MapPin },
-    { label: "Phone", value: profile.phone, icon: Phone },
-    { label: "Email", value: profile.email, icon: Mail },
-    { label: "Website", value: profile.website, icon: Globe },
+    { label: "Phone", value: profile.phone || "Not added", icon: Phone },
+    { label: "Email", value: profile.email || "Not added", icon: Mail },
+    { label: "Website", value: profile.website || "Not added", icon: Globe },
   ];
 
-  const handleSelectDate = (dateKey: string) => {
-    const selectedDate = parseDateKey(dateKey);
+  useEffect(() => {
+    let active = true;
+    const session = getVendorProfileSession();
 
-    setSelectedDateKey(dateKey);
-    setVisibleDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
-  };
-
-  const updateSelectedDateDetail = (
-    field: keyof CalendarDateDetail,
-    value: string,
-  ) => {
-    const nextDetail = {
-      ...selectedDateDetail,
-      [field]: value,
-    } as CalendarDateDetail;
-
-    setCalendarDetails((current) => ({
-      ...current,
-      [selectedDateKey]: nextDetail,
-    }));
-
-    if (field === "calendarStatus") {
-      setCalendarStatuses((current) => ({
-        ...current,
-        [selectedDateKey]: value as AvailabilityStatus,
-      }));
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Vendor login is required to load profile.");
+      });
+      return;
     }
-  };
+
+    Promise.all([
+      getVendorProfile(session),
+      listVendorServices(session),
+      listVendorPackages(session),
+      listVendorPortfolio(session),
+      listVendorAvailability(session),
+    ])
+      .then(([profileResult, servicesResult, packagesResult, portfolioResult, availabilityResult]) => {
+        if (!active) {
+          return;
+        }
+
+        saveVendorProfileSession(profileResult.user, session.token, profileResult.profile);
+        const nextProfile = createProfileViewModel(profileResult.profile);
+        const nextDetails = Object.fromEntries(
+          availabilityResult.events.map((event) => [event.date, eventToDetail(event)]),
+        );
+
+        setProfile(nextProfile);
+        setEditForm(nextProfile);
+        setServices(servicesResult.services);
+        setPackages(packagesResult.packages);
+        setPortfolio(portfolioResult.portfolio);
+        setCalendarDetails(nextDetails);
+        setStatus("idle");
+        setMessage("");
+      })
+      .catch((error) => {
+        if (!active) {
+          return;
+        }
+
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load vendor profile.");
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const openEditModal = () => {
     setEditForm(profile);
     setIsEditOpen(true);
   };
 
-  const updateEditForm = (field: keyof typeof initialVendor, value: string) => {
+  const updateEditForm = (field: keyof ProfileViewModel, value: string) => {
     setEditForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -198,13 +214,97 @@ export function VendorDashboardProfile() {
       return;
     }
 
-    updateEditForm("image", URL.createObjectURL(file));
+    readFileAsDataUrl(file).then((imageUrl) => updateEditForm("imageUrl", imageUrl));
   };
 
-  const saveProfile = (event: FormEvent<HTMLFormElement>) => {
+  const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setProfile(editForm);
-    setIsEditOpen(false);
+    const session = getVendorProfileSession();
+
+    if (!session?.token) {
+      setStatus("error");
+      setMessage("Vendor login is required to update profile.");
+      return;
+    }
+
+    setStatus("saving");
+    setMessage("");
+
+    try {
+      const result = await updateVendorProfile(
+        {
+          ownerName: editForm.ownerName.trim(),
+          vendorName: editForm.vendorName.trim(),
+          category: editForm.category.trim(),
+          location: editForm.location.trim(),
+          email: editForm.email.trim(),
+          ...(editForm.phone.trim() ? { phone: editForm.phone.trim() } : {}),
+          ...(editForm.about.trim() ? { about: editForm.about.trim() } : {}),
+          ...(editForm.imageUrl ? { imageUrl: editForm.imageUrl } : {}),
+        },
+        session,
+      );
+      saveVendorProfileSession(result.user, session.token, result.profile);
+      const nextProfile = createProfileViewModel(result.profile);
+      setProfile(nextProfile);
+      setEditForm(nextProfile);
+      setIsEditOpen(false);
+      setStatus("idle");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to update profile.");
+    }
+  };
+
+  const handleSelectDate = (dateKey: string) => {
+    const selectedDate = parseDateKey(dateKey);
+
+    setSelectedDateKey(dateKey);
+    setVisibleDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+  };
+
+  const updateSelectedDateDetail = (field: keyof CalendarDateDetail, value: string) => {
+    setCalendarDetails((current) => ({
+      ...current,
+      [selectedDateKey]: {
+        ...(current[selectedDateKey] ?? createDateDetail("available")),
+        [field]: value,
+      },
+    }));
+  };
+
+  const saveSelectedDateDetail = async () => {
+    const session = getVendorProfileSession();
+    const detail = selectedDateDetail;
+
+    if (!session?.token) {
+      setMessage("Vendor login is required to update availability.");
+      setStatus("error");
+      return;
+    }
+
+    setStatus("saving");
+    setMessage("");
+
+    try {
+      const result = await upsertVendorAvailability(
+        {
+          date: selectedDateKey,
+          status: detail.calendarStatus,
+          eventName: detail.eventName.trim(),
+        },
+        session,
+      );
+
+      setCalendarDetails((current) => ({
+        ...current,
+        [result.date]: eventToDetail(result),
+      }));
+      setStatus("idle");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to update availability.");
+    }
   };
 
   return (
@@ -212,50 +312,45 @@ export function VendorDashboardProfile() {
       <section className="rounded-[16px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="[font-family:var(--font-playfair)] text-[38px] font-normal leading-tight text-[#16231f]">
+            <h2 className="[font-family:var(--font-playfair)] text-[34px] font-normal leading-tight text-[#16231f]">
               My Profile
             </h2>
             <p className="mt-3 max-w-2xl font-inter text-[16px] leading-7 text-[#68746e]">
-              Manage your vendor profile, services, packages, portfolio, and
-              availability details from one page.
+              Manage your vendor profile, services, packages, portfolio, and availability details from one page.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={openEditModal}
-              className="rounded-md border border-[#0D5B46] px-5 py-3 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
-            >
+            <button type="button" onClick={openEditModal} className="rounded-md border border-[#0D5B46] px-5 py-3 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white">
               Edit Profile
             </button>
-            <button
-              type="button"
-              onClick={() => setIsViewOpen(true)}
-              className="rounded-md border border-[#0D5B46] px-5 py-3 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
-            >
+            <button type="button" onClick={() => setIsViewOpen(true)} className="rounded-md border border-[#0D5B46] px-5 py-3 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white">
               View Profile
             </button>
           </div>
         </div>
+        {message ? (
+          <p className={`mt-4 rounded-md px-3 py-2 font-inter text-sm ${status === "error" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}`} aria-live="polite">
+            {message}
+          </p>
+        ) : null}
       </section>
 
       <section className="rounded-[16px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
           <div className="relative h-[220px] w-full flex-none overflow-hidden rounded-[16px] bg-[#f5f7f4] lg:w-[220px]">
-            <Image src={profile.image} alt={profile.name} fill sizes="220px" className="object-cover" unoptimized={profile.image.startsWith("blob:")} />
+            <Image src={profile.imageUrl} alt={profile.vendorName} fill sizes="220px" className="object-cover" unoptimized={isUnoptimizedImage(profile.imageUrl)} />
           </div>
           <div>
             <div className="flex flex-wrap items-start gap-3">
               <h3 className="[font-family:var(--font-playfair)] text-[24px] font-semibold leading-tight text-[#16231f]">
-                {profile.name}
+                {profile.vendorName}
               </h3>
               <span className="rounded-full bg-emerald-50 px-3 py-1 font-inter text-sm font-semibold text-emerald-700">
                 {profile.status}
               </span>
             </div>
             <div className="mt-2">
-
-              <ProfileMeta icon={Package} label={profile.category} />
+              <ProfileMeta icon={PackageIcon} label={profile.category} />
             </div>
             <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
               <ProfileMeta icon={Star} label={`${profile.rating} rating`} />
@@ -272,110 +367,74 @@ export function VendorDashboardProfile() {
             <h3 className={boxHeadingClass}>Basic Info</h3>
           </div>
           <div className="mt-5 grid gap-3">
-            {infoRows.map((row) => {
-              return (
-                <div key={row.label} className="flex items-center gap-3 px-4 border-b border-[#edf1ee] pb-3">
-                  {/* <Icon className="h-5 w-5 text-[#0D5B46]" aria-hidden="true" /> */}
-                  <div>
-                    <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">
-                      {row.label}
-                    </p>
-                    <p className="font-inter text-[15px] font-medium text-[#16231f]">
-                      {row.value}
-                    </p>
-                  </div>
+            {infoRows.map((row) => (
+              <div key={row.label} className="flex items-center gap-3 border-b border-[#edf1ee] px-4 pb-3">
+                <row.icon className="h-5 w-5 text-[#0D5B46]" aria-hidden="true" />
+                <div>
+                  <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">{row.label}</p>
+                  <p className="font-inter text-[15px] font-medium text-[#16231f]">{row.value}</p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </section>
 
         <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
-        
           <div className="border-b border-[#edf1ee] px-4 py-4">
             <h3 className={boxHeadingClass}>About Vendor</h3>
           </div>
-          <p className="mt-5 font-inter text-[16px] px-4 leading-8 text-[#68746e]">
-            {profile.about}
-          </p>
+          <p className="mt-5 px-4 font-inter text-[16px] leading-8 text-[#68746e]">{profile.about}</p>
         </section>
       </div>
 
       <div className="grid gap-7 xl:grid-cols-2">
-        <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
-          <div className="flex flex-col gap-3 border-b border-[#edf1ee] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className={boxHeadingClass}>Services</h3>
-            <Link
-              href="/vendor-dashboard/services"
-              className="inline-flex self-start rounded-md border border-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white sm:self-auto"
-            >
-              Manage Service
-            </Link>
-          </div>
-          <div className="mt-5">
-            {services.map((service) => (
-              <div key={service.name} className="flex items-center px-4 justify-between gap-4 border-b border-[#edf1ee] py-4">
-                <div>
-                  <p className="font-inter text-[15px] font-semibold text-[#16231f]">{service.name}</p>
-                  <p className="mt-1 font-inter text-sm text-[#68746e]">Starting from {service.price}</p>
-                </div>
-                <span className={`rounded-full px-3 py-1 font-inter text-xs font-semibold ${service.status === "Active"
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-gray-100 text-gray-500"
-                  }`}>
-                  {service.status}
-                </span>
+        <ResourceBox title="Services" href="/vendor-dashboard/services" action="Manage Service">
+          {services.slice(0, 4).map((service) => (
+            <div key={service.id} className="flex items-center justify-between gap-4 border-b border-[#edf1ee] px-4 py-4">
+              <div>
+                <p className="font-inter text-[15px] font-semibold text-[#16231f]">{service.name}</p>
+                <p className="mt-1 font-inter text-sm text-[#68746e]">Starting from {service.startingPrice}</p>
               </div>
-            ))}
-          </div>
-        </section>
+              <span className="rounded-full bg-[#0D5B46]/10 px-3 py-1 font-inter text-xs font-semibold text-[#0D5B46]">
+                {service.category}
+              </span>
+            </div>
+          ))}
+          {!services.length ? <EmptyRow label="No services added yet." /> : null}
+        </ResourceBox>
 
-        <section className="rounded-[16px] bg-white  shadow-lg shadow-[#0D5B46]/10">
-          <div className="flex flex-col gap-3 border-b border-[#edf1ee] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className={boxHeadingClass}>Packages</h3>
-            <Link
-              href="/vendor-dashboard/packages"
-              className="inline-flex self-start rounded-md border border-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white sm:self-auto"
-            >
-              Manage Package
-            </Link>
-          </div>
-          <div className="mt-5">
-            {packages.map((pkg) => (
-              <div key={pkg.name} className="flex items-center px-4 justify-between gap-4 border-b border-[#edf1ee] py-4">
-                <p className="font-inter text-[15px] font-semibold text-[#16231f]">{pkg.name}</p>
-                <p className="font-inter text-[15px] font-semibold text-[#0D5B46]">{pkg.price}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        <ResourceBox title="Packages" href="/vendor-dashboard/packages" action="Manage Package">
+          {packages.slice(0, 4).map((packageItem) => (
+            <div key={packageItem.id} className="flex items-center justify-between gap-4 border-b border-[#edf1ee] px-4 py-4">
+              <p className="font-inter text-[15px] font-semibold text-[#16231f]">{packageItem.name}</p>
+              <p className="font-inter text-[15px] font-semibold text-[#0D5B46]">{packageItem.price}</p>
+            </div>
+          ))}
+          {!packages.length ? <EmptyRow label="No packages added yet." /> : null}
+        </ResourceBox>
       </div>
 
-      <section className="rounded-[16px] bg-white  shadow-lg shadow-[#0D5B46]/10">
+      <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="flex flex-col gap-3 border-b border-[#edf1ee] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <h3 className={boxHeadingClass}>Portfolio</h3>
-          <Link
-            href="/vendor-dashboard/portfolio"
-            className=" inline-flex self-start rounded-md border border-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white sm:self-auto"
-          >
+          <Link href="/vendor-dashboard/portfolio" className="inline-flex self-start rounded-md border border-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white sm:self-auto">
             Manage Portfolio
           </Link>
         </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 px-4 py-4">
-          {portfolioImages.map((image, index) => (
-            <div key={image} className="relative aspect-[4/3] overflow-hidden px-4 rounded-[14px] bg-[#f5f7f4]">
-              <Image src={image} alt={`Portfolio image ${index + 1}`} fill sizes="(min-width: 1024px) 24vw, 90vw" className="object-cover" />
+        <div className="grid gap-4 px-4 py-4 sm:grid-cols-2 lg:grid-cols-6">
+          {portfolio.slice(0, 6).map((item) => (
+            <div key={item.id} className="relative aspect-[4/3] overflow-hidden rounded-[14px] bg-[#f5f7f4]">
+              <Image src={item.imageUrl} alt={item.name} fill sizes="(min-width: 1024px) 14vw, 90vw" className="object-cover" unoptimized={isUnoptimizedImage(item.imageUrl)} />
             </div>
           ))}
+          {!portfolio.length ? <div className="rounded-md border border-dashed border-[#dfe7e2] p-4 font-inter text-sm text-[#68746e] sm:col-span-2 lg:col-span-6">No portfolio photos added yet.</div> : null}
         </div>
       </section>
 
       <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
-        <div className="mb-5 border-b border-[#edf1ee] px-4 py-4">
-          {/* <CalendarDays className="h-6 w-6 text-[#0D5B46]" aria-hidden="true" /> */}
-          <h3 className={boxHeadingClass}>
-            Availability Calendar
-          </h3>
+        <div className="mb-5 flex items-center gap-3 border-b border-[#edf1ee] px-4 py-4">
+          <CalendarDays className="h-5 w-5 text-[#0D5B46]" aria-hidden="true" />
+          <h3 className={boxHeadingClass}>Availability Calendar</h3>
         </div>
         <div className="grid gap-6 px-4 pb-4 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="rounded-[12px] border border-[#dfe7e2]">
@@ -383,252 +442,156 @@ export function VendorDashboardProfile() {
               year={visibleDate.getFullYear()}
               month={visibleDate.getMonth()}
               statusByDate={calendarStatuses}
+              labelByDate={calendarLabels}
               selectedDateKey={selectedDateKey}
               onSelectDate={handleSelectDate}
-              onPrevMonth={() =>
-                setVisibleDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))
-              }
-              onNextMonth={() =>
-                setVisibleDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))
-              }
+              onPrevMonth={() => setVisibleDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))}
+              onNextMonth={() => setVisibleDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1))}
             />
           </div>
           <aside className="rounded-[12px] border border-[#dfe7e2] p-5">
-            <div className="border-b border-[#edf1ee] px-4 py-4">
-              <h4 className={boxHeadingClass}>Selected Date Details</h4>
-            </div>
+            <h4 className={boxHeadingClass}>Selected Date Details</h4>
             <div className="mt-4 space-y-4 rounded-[10px] border border-[#edf1ee] p-4">
               <DetailRow label="Date" value={selectedDateLabel} />
-              <EditSelect
-                label="Status"
-                value={selectedDateDetail.calendarStatus}
-                options={calendarStatusOptions}
-                onChange={(value) =>
-                  updateSelectedDateDetail("calendarStatus", value)
-                }
-              />
-              <EditInput
-                label="Event Name"
-                value={selectedDateDetail.eventName}
-                onChange={(value) => updateSelectedDateDetail("eventName", value)}
-              />
-              <EditInput
-                label="Service Name"
-                value={selectedDateDetail.serviceName}
-                onChange={(value) =>
-                  updateSelectedDateDetail("serviceName", value)
-                }
-              />
-              <EditInput
-                label="Package Name"
-                value={selectedDateDetail.packageName}
-                onChange={(value) =>
-                  updateSelectedDateDetail("packageName", value)
-                }
-              />
-              <EditInput
-                label="Location"
-                value={selectedDateDetail.location}
-                onChange={(value) => updateSelectedDateDetail("location", value)}
-              />
-              <EditInput
-                label="Guests"
-                value={selectedDateDetail.guests}
-                onChange={(value) => updateSelectedDateDetail("guests", value)}
-              />
+              <EditSelect label="Status" value={selectedDateDetail.calendarStatus} options={calendarStatusOptions} onChange={(value) => updateSelectedDateDetail("calendarStatus", value)} />
+              <EditInput label="Event Name" value={selectedDateDetail.eventName} onChange={(value) => updateSelectedDateDetail("eventName", value)} />
+              <button type="button" onClick={saveSelectedDateDetail} disabled={status === "saving"} className="w-full rounded-md bg-[#0D5B46] px-4 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#001B12] disabled:cursor-not-allowed disabled:opacity-70">
+                {status === "saving" ? "Saving..." : "Save Calendar Event"}
+              </button>
             </div>
           </aside>
         </div>
       </section>
 
       {isViewOpen ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-5 py-8">
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[16px] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#edf1ee] px-6 py-5">
-              <div>
-                <h3 className="font-inter text-[24px] font-semibold text-[#16231f]">
-                  Profile Preview
-                </h3>
-                <p className="mt-1 font-inter text-sm text-[#68746e]">
-                  View details without leaving the profile page.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsViewOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f7f4] text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
-                aria-label="Close profile preview"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="relative min-h-[330px]">
-              <Image
-                src={profile.image}
-                alt={profile.name}
-                fill
-                sizes="900px"
-                className="object-cover"
-                unoptimized={profile.image.startsWith("blob:")}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
-              <div className="relative z-10 max-w-3xl p-8 text-white">
-                <span className="rounded-full bg-white px-4 py-1 font-inter text-sm font-semibold text-[#0D5B46]">
-                  {profile.status}
-                </span>
-                <h4 className="mt-5 [font-family:var(--font-playfair)] text-[44px] font-semibold leading-tight">
-                  {profile.name}
-                </h4>
-                <p className="mt-4 font-inter text-[17px] leading-8 text-white/84">
-                  {profile.about}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
-              {infoRows.map((row) => (
-                <div key={row.label} className="rounded-[12px] border border-[#dfe7e2] p-4">
-                  <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">
-                    {row.label}
-                  </p>
-                  <p className="mt-1 font-inter text-[15px] font-semibold text-[#16231f]">
-                    {row.value}
-                  </p>
-                </div>
-              ))}
-              <div className="rounded-[12px] border border-[#dfe7e2] p-4">
-                <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">
-                  Starting Price
-                </p>
-                <p className="mt-1 font-inter text-[15px] font-semibold text-[#16231f]">
-                  {profile.startingPrice}
-                </p>
-              </div>
-              <div className="rounded-[12px] border border-[#dfe7e2] p-4">
-                <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">
-                  Rating
-                </p>
-                <p className="mt-1 font-inter text-[15px] font-semibold text-[#16231f]">
-                  {profile.rating}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProfilePreview profile={profile} infoRows={infoRows} onClose={() => setIsViewOpen(false)} />
       ) : null}
 
       {isEditOpen ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-5 py-8">
-          <form
-            onSubmit={saveProfile}
-            className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[16px] bg-white shadow-2xl"
-          >
-            <div className="flex items-center justify-between border-b border-[#edf1ee] px-6 py-5">
-              <div>
-                <h3 className="font-inter text-[24px] font-semibold text-[#16231f]">
-                  Edit Profile
-                </h3>
-                <p className="mt-1 font-inter text-sm text-[#68746e]">
-                  Update your vendor information.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEditOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f7f4] text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white"
-                aria-label="Close edit profile"
-              >
-                <X className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="grid gap-5 px-6 py-6 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <p className="mb-2 font-inter text-sm font-semibold text-[#16231f]">
-                  Upload Photo
-                </p>
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <div className="relative h-28 w-28 overflow-hidden rounded-[14px] bg-[#f5f7f4]">
-                    <Image
-                      src={editForm.image}
-                      alt="Vendor preview"
-                      fill
-                      sizes="112px"
-                      className="object-cover"
-                      unoptimized={editForm.image.startsWith("blob:")}
-                    />
-                  </div>
-                  <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#0D5B46] px-5 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white">
-                    <Upload className="h-4 w-4" aria-hidden="true" />
-                    Upload Photo
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="sr-only"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <EditInput
-                label="Vendor Name"
-                value={editForm.name}
-                onChange={(value) => updateEditForm("name", value)}
-              />
-              <EditInput
-                label="Category Name"
-                value={editForm.category}
-                onChange={(value) => updateEditForm("category", value)}
-              />
-              <EditInput
-                label="Location"
-                value={editForm.location}
-                onChange={(value) => updateEditForm("location", value)}
-              />
-              <EditInput
-                label="Email"
-                type="email"
-                value={editForm.email}
-                onChange={(value) => updateEditForm("email", value)}
-              />
-              <EditInput
-                label="Website"
-                value={editForm.website}
-                onChange={(value) => updateEditForm("website", value)}
-              />
-              <EditInput
-                label="Phone"
-                type="tel"
-                value={editForm.phone}
-                onChange={(value) => updateEditForm("phone", value)}
-              />
-              <EditTextarea
-                label="About"
-                value={editForm.about}
-                onChange={(value) => updateEditForm("about", value)}
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 border-t border-[#edf1ee] px-6 py-5">
-              <button
-                type="button"
-                onClick={() => setIsEditOpen(false)}
-                className="rounded-md border border-[#dfe7e2] px-5 py-2.5 font-inter text-sm font-medium text-[#16231f] transition-colors hover:bg-[#f5f7f4]"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-md bg-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#001B12]"
-              >
-                Save Profile
-              </button>
-            </div>
-          </form>
-        </div>
+        <ProfileEditModal
+          editForm={editForm}
+          status={status}
+          onClose={() => setIsEditOpen(false)}
+          onSubmit={saveProfile}
+          onPhotoUpload={handlePhotoUpload}
+          onChange={updateEditForm}
+        />
       ) : null}
+    </div>
+  );
+}
+
+function ResourceBox({ title, href, action, children }: { title: string; href: string; action: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
+      <div className="flex flex-col gap-3 border-b border-[#edf1ee] px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <h3 className={boxHeadingClass}>{title}</h3>
+        <Link href={href} className="inline-flex self-start rounded-md border border-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white sm:self-auto">
+          {action}
+        </Link>
+      </div>
+      <div className="mt-1">{children}</div>
+    </section>
+  );
+}
+
+function EmptyRow({ label }: { label: string }) {
+  return <p className="px-4 py-5 font-inter text-sm text-[#68746e]">{label}</p>;
+}
+
+function ProfilePreview({ profile, infoRows, onClose }: { profile: ProfileViewModel; infoRows: Array<{ label: string; value: string; icon: LucideIcon }>; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-5 py-8">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[16px] bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#edf1ee] px-6 py-5">
+          <div>
+            <h3 className="font-inter text-[24px] font-semibold text-[#16231f]">Profile Preview</h3>
+            <p className="mt-1 font-inter text-sm text-[#68746e]">Live data from your vendor profile API.</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f7f4] text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white" aria-label="Close profile preview">
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+        <div className="relative min-h-[330px]">
+          <Image src={profile.imageUrl} alt={profile.vendorName} fill sizes="900px" className="object-cover" unoptimized={isUnoptimizedImage(profile.imageUrl)} />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
+          <div className="relative z-10 max-w-3xl p-8 text-white">
+            <span className="rounded-full bg-white px-4 py-1 font-inter text-sm font-semibold text-[#0D5B46]">{profile.status}</span>
+            <h4 className="mt-5 [font-family:var(--font-playfair)] text-[40px] font-semibold leading-tight">{profile.vendorName}</h4>
+            <p className="mt-4 font-inter text-[17px] leading-8 text-white/84">{profile.about}</p>
+          </div>
+        </div>
+        <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
+          {infoRows.map((row) => (
+            <div key={row.label} className="rounded-[12px] border border-[#dfe7e2] p-4">
+              <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">{row.label}</p>
+              <p className="mt-1 font-inter text-[15px] font-semibold text-[#16231f]">{row.value}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProfileEditModal({
+  editForm,
+  status,
+  onClose,
+  onSubmit,
+  onPhotoUpload,
+  onChange,
+}: {
+  editForm: ProfileViewModel;
+  status: "idle" | "loading" | "saving" | "error";
+  onClose: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onPhotoUpload: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChange: (field: keyof ProfileViewModel, value: string) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/45 px-5 py-8">
+      <form onSubmit={onSubmit} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[16px] bg-white shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#edf1ee] px-6 py-5">
+          <div>
+            <h3 className="font-inter text-[24px] font-semibold text-[#16231f]">Edit Profile</h3>
+            <p className="mt-1 font-inter text-sm text-[#68746e]">Owner, email, and phone come from the vendor profile API.</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f5f7f4] text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white" aria-label="Close edit profile">
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+        <div className="grid gap-5 px-6 py-6 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <p className="mb-2 font-inter text-sm font-semibold text-[#16231f]">Upload Photo</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="relative h-28 w-28 overflow-hidden rounded-[14px] bg-[#f5f7f4]">
+                <Image src={editForm.imageUrl} alt="Vendor preview" fill sizes="112px" className="object-cover" unoptimized={isUnoptimizedImage(editForm.imageUrl)} />
+              </div>
+              <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#0D5B46] px-5 font-inter text-sm font-medium text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white">
+                <Upload className="h-4 w-4" aria-hidden="true" />
+                Upload Photo
+                <input type="file" accept="image/*" onChange={onPhotoUpload} className="sr-only" />
+              </label>
+            </div>
+          </div>
+          <EditInput label="Owner Name" value={editForm.ownerName} onChange={(value) => onChange("ownerName", value)} />
+          <EditInput label="Vendor Name" value={editForm.vendorName} onChange={(value) => onChange("vendorName", value)} />
+          <EditInput label="Category Name" value={editForm.category} onChange={(value) => onChange("category", value)} />
+          <EditInput label="Location" value={editForm.location} onChange={(value) => onChange("location", value)} />
+          <EditInput label="Email" type="email" value={editForm.email} onChange={(value) => onChange("email", value)} />
+          <EditInput label="Phone" type="tel" value={editForm.phone} onChange={(value) => onChange("phone", value)} />
+          <EditTextarea label="About" value={editForm.about} onChange={(value) => onChange("about", value)} />
+        </div>
+        <div className="flex justify-end gap-3 border-t border-[#edf1ee] px-6 py-5">
+          <button type="button" onClick={onClose} className="rounded-md border border-[#dfe7e2] px-5 py-2.5 font-inter text-sm font-medium text-[#16231f] transition-colors hover:bg-[#f5f7f4]">
+            Cancel
+          </button>
+          <button type="submit" disabled={status === "saving"} className="rounded-md bg-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#001B12] disabled:cursor-not-allowed disabled:opacity-70">
+            {status === "saving" ? "Saving..." : "Save Profile"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -636,130 +599,69 @@ export function VendorDashboardProfile() {
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="font-inter text-xs font-semibold uppercase tracking-[0.12em] text-[#68746e]">
-        {label}
-      </p>
+      <p className="font-inter text-xs font-semibold uppercase tracking-[0.12em] text-[#68746e]">{label}</p>
       <p className="mt-1 font-inter text-sm font-medium text-[#16231f]">{value}</p>
     </div>
   );
 }
 
-function EditInput({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: "email" | "tel" | "text";
-}) {
+function EditInput({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: "email" | "tel" | "text" }) {
   return (
     <label className="block">
-      <span className="font-inter text-sm font-semibold text-[#16231f]">
-        {label}
-      </span>
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-2 min-h-12 w-full rounded-md border border-[#dfe7e2] px-4 font-inter text-sm text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]"
-      />
+      <span className="font-inter text-sm font-semibold text-[#16231f]">{label}</span>
+      <input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-12 w-full rounded-md border border-[#dfe7e2] px-4 font-inter text-sm text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]" />
     </label>
   );
 }
 
-function EditTextarea({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
+function EditTextarea({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (
     <label className="block sm:col-span-2">
-      <span className="font-inter text-sm font-semibold text-[#16231f]">
-        {label}
-      </span>
-      <textarea
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        rows={5}
-        className="mt-2 w-full resize-none rounded-md border border-[#dfe7e2] px-4 py-3 font-inter text-sm leading-6 text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]"
-      />
+      <span className="font-inter text-sm font-semibold text-[#16231f]">{label}</span>
+      <textarea value={value} onChange={(event) => onChange(event.target.value)} rows={4} className="mt-2 w-full resize-none rounded-md border border-[#dfe7e2] px-4 py-3 font-inter text-sm leading-6 text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]" />
     </label>
   );
 }
 
-function EditSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-}) {
+function EditSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
   return (
     <label className="block">
-      <span className="font-inter text-sm font-semibold text-[#16231f]">
-        {label}
-      </span>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-2 min-h-12 w-full rounded-md border border-[#dfe7e2] bg-white px-4 font-inter text-sm capitalize text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]"
-      >
+      <span className="font-inter text-sm font-semibold text-[#16231f]">{label}</span>
+      <select value={value} onChange={(event) => onChange(event.target.value)} className="mt-2 min-h-12 w-full rounded-md border border-[#dfe7e2] bg-white px-4 font-inter text-sm capitalize text-[#16231f] outline-none transition-colors focus:border-[#0D5B46]">
         {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
+          <option key={option} value={option}>{option}</option>
         ))}
       </select>
     </label>
   );
 }
 
-function createDateDetail(status: AvailabilityStatus): CalendarDateDetail {
-  return {
-    calendarStatus: status,
-    eventName: status === "available" ? "Available Date" : "",
-    serviceName: "",
-    packageName: "",
-    location: status === "available" ? "Available across London" : "",
-    guests: "",
-  };
-}
-
-function formatSelectedDate(dateKey: string) {
-  return parseDateKey(dateKey).toLocaleDateString("en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function parseDateKey(dateKey: string) {
-  return new Date(`${dateKey}T00:00:00`);
-}
-
-function ProfileMeta({
-  icon: Icon,
-  label,
-}: {
-  icon: LucideIcon;
-  label: string;
-}) {
+function ProfileMeta({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <div className="flex items-center gap-2 font-inter text-[15px] font-medium text-[#68746e]">
       <Icon className="h-5 w-5 text-[#0D5B46]" aria-hidden="true" />
       <span>{label}</span>
     </div>
   );
+}
+
+function formatDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function parseDateKey(dateKey: string) {
+  return new Date(`${dateKey}T00:00:00`);
+}
+
+function isUnoptimizedImage(src: string) {
+  return src.startsWith("blob:") || src.startsWith("data:");
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }

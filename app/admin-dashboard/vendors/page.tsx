@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Eye,
   Search,
@@ -10,11 +11,14 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import type { AccountApprovalStatus, AuthUser } from "@/lib/auth";
+import { listAdminVendors } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-session";
 
 type VendorStatus = "Active" | "Pending" | "Blocked";
 
 type Vendor = {
-  id: number;
+  id: string;
   name: string;
   category: string;
   image: string;
@@ -25,59 +29,40 @@ type Vendor = {
   status: VendorStatus;
 };
 
-const initialVendors: Vendor[] = [
-  {
-    id: 1,
-    name: "Royal Moments Photography",
-    category: "Photography",
-    image: "/images/mej.png",
-    location: "London",
-    rating: "4.9",
-    enquiries: 48,
-    bookings: 21,
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Prime Venue Collection",
-    category: "Venue",
-    image: "/images/venue.png",
-    location: "Manchester",
-    rating: "4.8",
-    enquiries: 36,
-    bookings: 18,
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Signature Flavours Catering",
-    category: "Catering",
-    image: "/images/card-4.png",
-    location: "Bristol",
-    rating: "4.7",
-    enquiries: 29,
-    bookings: 14,
-    status: "Pending",
-  },
-  {
-    id: 4,
-    name: "Glam Studio Artists",
-    category: "Makeup Artists",
-    image: "/images/cm-1.png",
-    location: "Birmingham",
-    rating: "4.6",
-    enquiries: 19,
-    bookings: 9,
-    status: "Blocked",
-  },
-];
-
 export default function AdminVendorsPage() {
-  const [vendors, setVendors] = useState(initialVendors);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [query, setQuery] = useState("");
   const [filterBy, setFilterBy] = useState("all");
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [deleteVendor, setDeleteVendor] = useState<Vendor | null>(null);
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  async function loadVendors(token: string) {
+    setStatus("loading");
+    setMessage("");
+
+    try {
+      const result = await listAdminVendors(token);
+      setVendors(result.vendors.map(mapUserToVendor));
+      setStatus("success");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to load vendors");
+    }
+  }
+
+  useEffect(() => {
+    const session = getAdminSession();
+
+    if (!session?.token) {
+      setStatus("error");
+      setMessage("Admin login is required to view vendors.");
+      return;
+    }
+
+    void loadVendors(session.token);
+  }, []);
 
   const filteredVendors = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -150,6 +135,15 @@ export default function AdminVendorsPage() {
         </div>
       </section>
 
+      {message ? (
+        <section className="rounded-[12px] bg-rose-50 px-4 py-3 font-inter text-sm font-semibold text-rose-700">
+          {message}
+          <Link href="/login" className="ml-2 underline">
+            Go to admin login
+          </Link>
+        </section>
+      ) : null}
+
       <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left">
@@ -214,6 +208,17 @@ export default function AdminVendorsPage() {
                   </td>
                 </tr>
               ))}
+
+              {filteredVendors.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="border-b border-[#edf1ee] px-4 py-10 text-center font-inter text-sm font-medium text-[#68746e]"
+                  >
+                    {status === "loading" ? "Loading vendors..." : "No vendors found."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -267,6 +272,40 @@ export default function AdminVendorsPage() {
       ) : null}
     </div>
   );
+}
+
+function mapUserToVendor(user: AuthUser): Vendor {
+  const vendor = user as AuthUser & {
+    vendorProfile?: {
+      vendorName: string;
+      category: string;
+      location: string;
+    } | null;
+  };
+
+  return {
+    id: user.id,
+    name: vendor.vendorProfile?.vendorName ?? user.name,
+    category: vendor.vendorProfile?.category ?? "Vendor Account",
+    image: "/images/mej.png",
+    location: vendor.vendorProfile?.location ?? "Not provided",
+    rating: "-",
+    enquiries: 0,
+    bookings: 0,
+    status: mapVendorStatus(user.approvalStatus)
+  };
+}
+
+function mapVendorStatus(status: AccountApprovalStatus): VendorStatus {
+  if (status === "APPROVED") {
+    return "Active";
+  }
+
+  if (status === "SUSPENDED") {
+    return "Blocked";
+  }
+
+  return "Pending";
 }
 
 function ProfileCell({

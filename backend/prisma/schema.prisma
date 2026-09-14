@@ -1,0 +1,212 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  VENDOR
+  ADMIN
+}
+
+enum AccountStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+}
+
+enum NotificationAudience {
+  ADMIN
+  CUSTOMER
+  VENDOR
+}
+
+enum NotificationStatus {
+  PENDING
+  REVIEWED
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  approvalStatus AccountStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  vendorProfile VendorProfile?
+  vendorServices VendorService[]
+  vendorPackages VendorPackage[]
+  vendorPortfolioItems VendorPortfolioItem[]
+  vendorAvailabilityEvents VendorAvailabilityEvent[]
+  customerSavedVendors CustomerSavedVendor[] @relation("CustomerSavedVendors")
+  vendorShortlistedBy CustomerSavedVendor[] @relation("VendorShortlistedBy")
+  customerEnquiries CustomerEnquiry[] @relation("CustomerEnquiries")
+  vendorEnquiries CustomerEnquiry[] @relation("VendorEnquiries")
+  customerReviews CustomerReview[] @relation("CustomerReviews")
+  vendorReviews CustomerReview[] @relation("VendorReviews")
+}
+
+model Notification {
+  id          String               @id @default(cuid())
+  audience    NotificationAudience
+  recipientId String?
+  kind        String
+  title       String
+  detail      String
+  status      NotificationStatus   @default(PENDING)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([audience, recipientId, status])
+  @@index([createdAt])
+}
+
+model BlogPost {
+  id             String     @id @default(cuid())
+  slug           String     @unique
+  title          String
+  category       String
+  bannerImage    String
+  paragraph      String
+  extraParagraph String?
+  listTitle      String?
+  listItems      String[]
+  status         BlogStatus @default(PUBLISHED)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model VendorProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  ownerName   String
+  vendorName  String
+  category    String
+  location    String
+  about       String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VendorService {
+  id            String          @id @default(cuid())
+  userId        String
+  name          String
+  category      String
+  startingPrice String
+  description   String?
+  imageUrl      String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  packages      VendorPackage[]
+}
+
+model VendorPackage {
+  id          String         @id @default(cuid())
+  userId      String
+  serviceId   String?
+  name        String
+  price       String
+  description String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service     VendorService? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  customerEnquiries CustomerEnquiry[]
+}
+
+model VendorPortfolioItem {
+  id        String   @id @default(cuid())
+  userId    String
+  imageUrl  String
+  name      String
+  category  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VendorAvailabilityEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  date        String
+  status      String
+  eventName   String
+  serviceName String?
+  packageName String?
+  location    String?
+  guests      String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model CustomerSavedVendor {
+  id         String   @id @default(cuid())
+  customerId String
+  vendorId   String
+  createdAt  DateTime @default(now())
+  customer   User     @relation("CustomerSavedVendors", fields: [customerId], references: [id], onDelete: Cascade)
+  vendor     User     @relation("VendorShortlistedBy", fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, vendorId])
+  @@index([vendorId])
+}
+
+model CustomerEnquiry {
+  id          String         @id @default(cuid())
+  customerId  String
+  vendorId    String
+  packageId   String?
+  packageName String?
+  message     String
+  vendorResponse String?
+  respondedAt DateTime?
+  status      String         @default("pending")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  customer    User           @relation("CustomerEnquiries", fields: [customerId], references: [id], onDelete: Cascade)
+  vendor      User           @relation("VendorEnquiries", fields: [vendorId], references: [id], onDelete: Cascade)
+  package     VendorPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([vendorId])
+  @@index([packageId])
+}
+
+model CustomerReview {
+  id         String   @id @default(cuid())
+  customerId String
+  vendorId   String
+  rating     Int
+  message    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   User     @relation("CustomerReviews", fields: [customerId], references: [id], onDelete: Cascade)
+  vendor     User     @relation("VendorReviews", fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, vendorId])
+  @@index([vendorId])
+}

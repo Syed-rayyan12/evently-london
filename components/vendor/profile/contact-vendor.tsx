@@ -41,14 +41,14 @@ export default function ContactVendorCard({
       </div>
 
       <div className="mt-6 space-y-3">
-        <button
+        {/* <button
           type="button"
           onClick={onRequestQuote}
           className="btn-slide group w-full rounded-[8px] bg-[#003224] px-5 py-3 font-inter text-[15px] font-medium text-white"
         >
           <span className="btn-slide-overlay btn-slide-overlay-gold" />
           <span className="btn-slide-label">Request Quote</span>
-        </button>
+        </button> */}
         <button
           type="button"
           onClick={onSendMessage}

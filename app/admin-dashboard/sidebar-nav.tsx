@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  Bell,
   BookOpenText,
   Building2,
   CalendarCheck2,
@@ -11,11 +12,14 @@ import {
   MessageSquareText,
   Settings,
   Star,
+  UserCheck,
   Users,
 } from "lucide-react";
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/admin-dashboard", icon: LayoutDashboard },
+  { label: "Notifications", href: "/admin-dashboard/notifications", icon: Bell },
+  { label: "Approvals", href: "/admin-dashboard/approvals", icon: UserCheck },
   { label: "Vendors", href: "/admin-dashboard/vendors", icon: Building2 },
   { label: "Users", href: "/admin-dashboard/users", icon: Users },
   {

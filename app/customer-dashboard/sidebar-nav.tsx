@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Bell,
   CalendarCheck2,
   Heart,
   LayoutDashboard,
@@ -13,6 +14,7 @@ import {
 
 const sidebarLinks = [
   { label: "Dashboard", href: "/customer-dashboard", icon: LayoutDashboard },
+  { label: "Notifications", href: "/customer-dashboard/notifications", icon: Bell },
   { label: "My Events", href: "/customer-dashboard/events", icon: Ticket },
   { label: "Saved Vendors", href: "/customer-dashboard/saved-vendors", icon: Heart },
   {

@@ -6,9 +6,10 @@ import type { AvailabilityStatus } from "@/data/vendor-data";
 
 type AvailabilityTabProps = {
   statusByDate: Record<string, AvailabilityStatus>;
+  labelByDate?: Record<string, string>;
 };
 
-export default function AvailabilityTab({ statusByDate }: AvailabilityTabProps) {
+export default function AvailabilityTab({ statusByDate, labelByDate = {} }: AvailabilityTabProps) {
   const [visibleDate, setVisibleDate] = useState(new Date(2026, 8, 1));
 
   const goToPreviousMonth = () => {
@@ -31,6 +32,7 @@ export default function AvailabilityTab({ statusByDate }: AvailabilityTabProps) 
           year={visibleDate.getFullYear()}
           month={visibleDate.getMonth()}
           statusByDate={statusByDate}
+          labelByDate={labelByDate}
           onPrevMonth={goToPreviousMonth}
           onNextMonth={goToNextMonth}
         />

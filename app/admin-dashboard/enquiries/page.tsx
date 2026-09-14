@@ -1,14 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Eye, MessageSquareText, Search, SlidersHorizontal, X } from "lucide-react";
+import { getAdminSession } from "@/lib/admin-session";
+import { listAdminEnquiries, type AdminEnquiry } from "@/lib/auth";
 
-type EnquiryStatus = "New" | "Replied" | "Closed";
+type EnquiryStatus = "New" | "Replied" | "Booked" | "Closed";
 
 type Enquiry = {
-  id: number;
+  id: string;
   customer: string;
   customerImage: string;
   vendor: string;
@@ -18,54 +20,40 @@ type Enquiry = {
   submitted: string;
   status: EnquiryStatus;
   requirement: string;
+  packageName: string;
+  vendorResponse: string;
 };
 
-const enquiries: Enquiry[] = [
-  {
-    id: 1,
-    customer: "Ayesha Khan",
-    customerImage: "/images/profile-2.png",
-    vendor: "Royal Moments Photography",
-    event: "Sharma Wedding",
-    category: "Photography",
-    eventDate: "12 Sep 2026",
-    submitted: "01 Sep 2026",
-    status: "New",
-    requirement:
-      "Customer requested full-day wedding photography, family portraits, and a cinematic highlight film.",
-  },
-  {
-    id: 2,
-    customer: "Rohan Mehta",
-    customerImage: "/images/couple.png",
-    vendor: "Prime Venue Collection",
-    event: "Engagement Celebration",
-    category: "Venue",
-    eventDate: "18 Sep 2026",
-    submitted: "31 Aug 2026",
-    status: "Replied",
-    requirement:
-      "Customer needs a venue for 120 guests with stage setup, parking, and dinner service access.",
-  },
-  {
-    id: 3,
-    customer: "Sara Malik",
-    customerImage: "/images/cm-2.png",
-    vendor: "Signature Flavours Catering",
-    event: "Birthday Celebration",
-    category: "Catering",
-    eventDate: "02 Oct 2026",
-    submitted: "30 Aug 2026",
-    status: "Closed",
-    requirement:
-      "Customer requested buffet catering with vegetarian options and dessert table service.",
-  },
-];
-
 export default function AdminEnquiriesPage() {
+  const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [query, setQuery] = useState("");
   const [filterBy, setFilterBy] = useState("all");
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
+  const [status, setStatus] = useState<"loading" | "idle" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const session = getAdminSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Admin login is required to load enquiries.");
+      });
+      return;
+    }
+
+    void listAdminEnquiries(session.token)
+      .then((result) => {
+        setEnquiries(result.enquiries.map(mapAdminEnquiry));
+        setStatus("idle");
+        setMessage("");
+      })
+      .catch((error) => {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load enquiries.");
+      });
+  }, []);
 
   const filteredEnquiries = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -76,6 +64,7 @@ export default function AdminEnquiriesPage() {
         enquiry.vendor,
         enquiry.event,
         enquiry.category,
+        enquiry.packageName,
         enquiry.eventDate,
         enquiry.submitted,
         enquiry.status,
@@ -88,7 +77,7 @@ export default function AdminEnquiriesPage() {
 
       return matchesQuery && matchesFilter;
     });
-  }, [filterBy, query]);
+  }, [enquiries, filterBy, query]);
 
   return (
     <div className="space-y-7">
@@ -97,8 +86,7 @@ export default function AdminEnquiriesPage() {
           Enquiries
         </h2>
         <p className="mt-3 max-w-2xl font-inter text-[16px] leading-7 text-[#68746e]">
-          Track customer enquiries by vendor, event, category, submitted date,
-          and status.
+          Track real customer enquiries by vendor, event, category, submitted date, and status.
         </p>
       </section>
 
@@ -124,22 +112,35 @@ export default function AdminEnquiriesPage() {
               <option value="all">Filter</option>
               <option value="new">New</option>
               <option value="replied">Replied</option>
+              <option value="booked">Booked</option>
               <option value="closed">Closed</option>
             </select>
           </label>
         </div>
       </section>
 
+      {message ? (
+        <section
+          className={`rounded-[12px] px-4 py-3 font-inter text-sm font-semibold ${
+            status === "error" ? "bg-rose-50 text-rose-700" : "bg-emerald-50 text-emerald-700"
+          }`}
+          aria-live="polite"
+        >
+          {message}
+        </section>
+      ) : null}
+
       <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1060px] border-separate border-spacing-0 text-left">
+          <table className="w-full min-w-[1160px] border-separate border-spacing-0 text-left">
             <thead>
               <tr className="bg-[#f5f7f4]">
                 {[
                   "Customer Name",
                   "Vendor Name",
-                  "Events",
+                  "Event",
                   "Category",
+                  "Package",
                   "Event Date",
                   "Submitted",
                   "Status",
@@ -167,6 +168,7 @@ export default function AdminEnquiriesPage() {
                   <TableCell>{enquiry.vendor}</TableCell>
                   <TableCell>{enquiry.event}</TableCell>
                   <TableCell>{enquiry.category}</TableCell>
+                  <TableCell>{enquiry.packageName}</TableCell>
                   <TableCell>{enquiry.eventDate}</TableCell>
                   <TableCell>{enquiry.submitted}</TableCell>
                   <td className="border-b border-[#edf1ee] px-4 py-3">
@@ -184,6 +186,17 @@ export default function AdminEnquiriesPage() {
                   </td>
                 </tr>
               ))}
+
+              {filteredEnquiries.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="border-b border-[#edf1ee] px-4 py-10 text-center font-inter text-sm font-medium text-[#68746e]"
+                  >
+                    {status === "loading" ? "Loading enquiries..." : "No enquiries found."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -204,26 +217,92 @@ export default function AdminEnquiriesPage() {
             <DetailItem label="Vendor" value={selectedEnquiry.vendor} />
             <DetailItem label="Event" value={selectedEnquiry.event} />
             <DetailItem label="Category" value={selectedEnquiry.category} />
+            <DetailItem label="Package" value={selectedEnquiry.packageName} />
             <DetailItem label="Event Date" value={selectedEnquiry.eventDate} />
             <DetailItem label="Submitted" value={selectedEnquiry.submitted} />
             <DetailItem label="Status" value={selectedEnquiry.status} />
           </div>
 
-          <div className="mt-4 rounded-[12px] bg-blue-50 p-4">
-            <p className="flex items-center gap-2 font-inter text-[13px] font-semibold uppercase tracking-[0.14em] text-blue-700">
-              <MessageSquareText className="h-4 w-4" aria-hidden="true" />
-              Requirement
-            </p>
-            <p className="mt-2 font-inter text-[15px] leading-7 text-blue-950">
-              {selectedEnquiry.requirement}
-            </p>
-          </div>
+          <MessageBlock title="Requirement" message={selectedEnquiry.requirement} tone="blue" />
+          <MessageBlock title="Vendor Response" message={selectedEnquiry.vendorResponse} tone="green" />
 
           <ModalClose onClick={() => setSelectedEnquiry(null)} />
         </Modal>
       ) : null}
     </div>
   );
+}
+
+function mapAdminEnquiry(enquiry: AdminEnquiry): Enquiry {
+  const details = getEnquiryDetails(enquiry.message);
+
+  return {
+    id: enquiry.id,
+    customer: enquiry.customer.name,
+    customerImage: "/images/profile-2.png",
+    vendor: enquiry.vendor.vendorName,
+    event: details.eventType ?? "Quote request",
+    category: enquiry.vendor.category,
+    eventDate: details.eventDate ?? "Not provided",
+    submitted: formatDate(enquiry.createdAt),
+    status: mapStatus(enquiry.status, enquiry.vendorResponse),
+    requirement: details.requirements ?? details.customerRequest ?? enquiry.message,
+    packageName: enquiry.packageName ?? details.packageName ?? "Custom quote",
+    vendorResponse: enquiry.vendorResponse ?? "No vendor response yet."
+  };
+}
+
+function getEnquiryDetails(message: string) {
+  return {
+    packageName: getMessageField(message, "Package"),
+    eventType: getMessageField(message, "Event Type"),
+    eventDate: getMessageField(message, "Event Date"),
+    requirements: getMessageField(message, "Requirements"),
+    customerRequest: getCustomerRequest(message),
+  };
+}
+
+function getMessageField(message: string, label: string) {
+  const line = message
+    .split("\n")
+    .find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+
+  return line?.replace(new RegExp(`^${label}:\\s*`, "i"), "").trim() || undefined;
+}
+
+function getCustomerRequest(message: string) {
+  const marker = "Customer request:";
+  const markerIndex = message.toLowerCase().indexOf(marker.toLowerCase());
+
+  if (markerIndex === -1) {
+    return undefined;
+  }
+
+  return message.slice(markerIndex + marker.length).trim() || undefined;
+}
+
+function mapStatus(status: string, vendorResponse: string | null): EnquiryStatus {
+  if (status.toLowerCase() === "booked") {
+    return "Booked";
+  }
+
+  if (vendorResponse || status.toLowerCase() === "replied") {
+    return "Replied";
+  }
+
+  if (status.toLowerCase() === "closed") {
+    return "Closed";
+  }
+
+  return "New";
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function ProfileCell({
@@ -258,6 +337,20 @@ function ProfileCell({
   );
 }
 
+function MessageBlock({ title, message, tone }: { title: string; message: string; tone: "blue" | "green" }) {
+  return (
+    <div className={`mt-4 rounded-[12px] p-4 ${tone === "blue" ? "bg-blue-50" : "bg-emerald-50"}`}>
+      <p className={`flex items-center gap-2 font-inter text-[13px] font-semibold uppercase tracking-[0.14em] ${tone === "blue" ? "text-blue-700" : "text-emerald-700"}`}>
+        <MessageSquareText className="h-4 w-4" aria-hidden="true" />
+        {title}
+      </p>
+      <p className={`mt-2 font-inter text-[15px] leading-7 ${tone === "blue" ? "text-blue-950" : "text-emerald-950"}`}>
+        {message}
+      </p>
+    </div>
+  );
+}
+
 function TableCell({ children }: { children: ReactNode }) {
   return (
     <td className="whitespace-nowrap border-b border-[#edf1ee] px-4 py-3 font-inter text-[13px] font-medium text-[#16231f]">
@@ -285,7 +378,9 @@ function StatusBadge({ status }: { status: EnquiryStatus }) {
       ? "bg-rose-50 text-rose-700"
       : status === "Replied"
         ? "bg-blue-50 text-blue-700"
-        : "bg-gray-100 text-gray-500";
+        : status === "Booked"
+          ? "bg-emerald-50 text-emerald-700"
+          : "bg-gray-100 text-gray-500";
 
   return (
     <span className={`whitespace-nowrap rounded-full px-2.5 py-1 font-inter text-[11px] font-semibold ${className}`}>

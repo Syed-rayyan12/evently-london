@@ -1,85 +1,71 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Eye, ListFilter, Search, Send, Trash2, X } from "lucide-react";
+import {
+  deleteVendorEnquiry,
+  listVendorEnquiries,
+  respondToVendorEnquiry,
+  type VendorEnquiry
+} from "@/lib/auth";
+import { getVendorProfileSession } from "@/lib/vendor-session";
 
 type Enquire = {
-  id: number;
+  id: string;
   customer: string;
   image: string;
   email: string;
   phone: string;
   service: string;
-  event: string;
+  packageName: string;
+  eventType: string;
   eventDate: string;
+  guestCount: string;
+  location: string;
   submitted: string;
   status: string;
   message: string;
+  vendorResponse: string;
+  respondedAt: string;
 };
 
-const initialEnquires: Enquire[] = [
-  {
-    id: 1,
-    customer: "Ayesha Khan",
-    image: "/images/profile-1.png",
-    email: "ayesha.khan@example.com",
-    phone: "+44 7700 900124",
-    service: "Photography",
-    event: "Wedding",
-    eventDate: "12 Sep 2026",
-    submitted: "31 Aug 2026",
-    status: "New",
-    message: "Looking for full-day wedding photography and cinematic highlights.",
-  },
-  {
-    id: 2,
-    customer: "Hamza Malik",
-    image: "/images/profile-2.png",
-    email: "hamza.malik@example.com",
-    phone: "+44 7700 900247",
-    service: "Venue",
-    event: "Engagement",
-    eventDate: "18 Sep 2026",
-    submitted: "30 Aug 2026",
-    status: "Pending",
-    message: "Needs an elegant venue for 150 guests with catering options.",
-  },
-  {
-    id: 3,
-    customer: "Sara Ahmed",
-    image: "/images/profile-3.png",
-    email: "sara.ahmed@example.com",
-    phone: "+44 7700 900368",
-    service: "Decor & Styling",
-    event: "Baby Shower",
-    eventDate: "24 Sep 2026",
-    submitted: "29 Aug 2026",
-    status: "Confirmed",
-    message: "Soft floral decor, dessert table styling, and a welcome backdrop.",
-  },
-  {
-    id: 4,
-    customer: "Bilal Raza",
-    image: "/images/profile-1.png",
-    email: "bilal.raza@example.com",
-    phone: "+44 7700 900481",
-    service: "Entertainment",
-    event: "Birthday",
-    eventDate: "02 Oct 2026",
-    submitted: "28 Aug 2026",
-    status: "Review",
-    message: "Birthday entertainment and sound setup for an evening event.",
-  },
-];
-
 export default function EnquiresPage() {
-  const [enquireRows, setEnquireRows] = useState(initialEnquires);
+  const [enquireRows, setEnquireRows] = useState<Enquire[]>([]);
   const [query, setQuery] = useState("");
   const [selectedEnquire, setSelectedEnquire] = useState<Enquire | null>(null);
   const [responseEnquire, setResponseEnquire] = useState<Enquire | null>(null);
   const [enquireToDelete, setEnquireToDelete] = useState<Enquire | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("loading");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const session = getVendorProfileSession();
+
+    if (!session?.token) {
+      void Promise.resolve().then(() => {
+        setStatus("error");
+        setMessage("Vendor login is required to load enquiries.");
+      });
+      return;
+    }
+
+    void Promise.resolve()
+      .then(() => {
+        setStatus("loading");
+        return listVendorEnquiries(session);
+      })
+      .then((result) => {
+        setEnquireRows(result.enquiries.map(mapVendorEnquiry));
+        setStatus("success");
+        setMessage("");
+      })
+      .catch((error) => {
+        setStatus("error");
+        setMessage(error instanceof Error ? error.message : "Unable to load enquiries.");
+      });
+  }, []);
 
   const filteredEnquires = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -94,8 +80,12 @@ export default function EnquiresPage() {
         enquire.email,
         enquire.phone,
         enquire.service,
-        enquire.event,
+        enquire.packageName,
+        enquire.eventType,
         enquire.eventDate,
+        enquire.guestCount,
+        enquire.location,
+        enquire.message,
         enquire.submitted,
         enquire.status,
       ]
@@ -105,21 +95,81 @@ export default function EnquiresPage() {
     );
   }, [enquireRows, query]);
 
-  const deleteEnquire = () => {
+  const deleteEnquire = async () => {
     if (!enquireToDelete) {
       return;
     }
 
-    setEnquireRows((currentRows) =>
-      currentRows.filter((row) => row.id !== enquireToDelete.id),
-    );
-    if (selectedEnquire?.id === enquireToDelete.id) {
-      setSelectedEnquire(null);
+    const session = getVendorProfileSession();
+
+    if (!session?.token) {
+      setStatus("error");
+      setMessage("Vendor login is required to delete enquiries.");
+      return;
     }
-    if (responseEnquire?.id === enquireToDelete.id) {
+
+    try {
+      await deleteVendorEnquiry(enquireToDelete.id, session);
+      setEnquireRows((currentRows) =>
+        currentRows.filter((row) => row.id !== enquireToDelete.id),
+      );
+      if (selectedEnquire?.id === enquireToDelete.id) {
+        setSelectedEnquire(null);
+      }
+      if (responseEnquire?.id === enquireToDelete.id) {
+        setResponseEnquire(null);
+      }
+      setEnquireToDelete(null);
+      setStatus("success");
+      setMessage("Enquiry deleted.");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to delete enquiry.");
+    }
+  };
+
+  const sendResponse = async () => {
+    if (!responseEnquire) {
+      return;
+    }
+
+    const session = getVendorProfileSession();
+    const trimmedMessage = responseMessage.trim();
+
+    if (!session?.token) {
+      setStatus("error");
+      setMessage("Vendor login is required to respond to enquiries.");
+      return;
+    }
+
+    if (!trimmedMessage) {
+      setStatus("error");
+      setMessage("Please write a response message before sending.");
+      return;
+    }
+
+    try {
+      const result = await respondToVendorEnquiry(
+        responseEnquire.id,
+        { message: trimmedMessage },
+        session
+      );
+      const nextRow = mapVendorEnquiry(result.enquiry);
+
+      setEnquireRows((currentRows) =>
+        currentRows.map((row) => (row.id === nextRow.id ? nextRow : row))
+      );
+      if (selectedEnquire?.id === nextRow.id) {
+        setSelectedEnquire(nextRow);
+      }
       setResponseEnquire(null);
+      setResponseMessage("");
+      setStatus("success");
+      setMessage("Response sent to customer.");
+    } catch (error) {
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Unable to send response.");
     }
-    setEnquireToDelete(null);
   };
 
   return (
@@ -156,16 +206,32 @@ export default function EnquiresPage() {
         </div>
       </section>
 
+      {message ? (
+        <section
+          className={`rounded-[12px] px-4 py-3 font-inter text-sm font-semibold ${
+            status === "error"
+              ? "bg-rose-50 text-rose-700"
+              : "bg-emerald-50 text-emerald-700"
+          }`}
+          aria-live="polite"
+        >
+          {message}
+        </section>
+      ) : null}
+
       <section className="rounded-[16px] bg-white rounded-lg shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] border-separate rounded-md border-spacing-0 text-left">
+          <table className="w-full min-w-[1300px] border-separate rounded-md border-spacing-0 text-left">
             <thead>
               <tr className="bg-[#f5f7f4]">
                 {[
                   "Customer",
                   "Service",
-                  "Event",
+                  "Package",
+                  "Event Type",
                   "Event Date",
+                  "Guests",
+                  "Location",
                   "Submitted",
                   "Status",
                   "Action",
@@ -202,10 +268,19 @@ export default function EnquiresPage() {
                     {enquire.service}
                   </td>
                   <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
-                    {enquire.event}
+                    {enquire.packageName}
+                  </td>
+                  <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
+                    {enquire.eventType}
                   </td>
                   <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
                     {enquire.eventDate}
+                  </td>
+                  <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
+                    {enquire.guestCount}
+                  </td>
+                  <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
+                    {enquire.location}
                   </td>
                   <td className="border-b border-[#edf1ee] px-4 py-4 font-inter text-[15px] text-[#68746e]">
                     {enquire.submitted}
@@ -245,6 +320,17 @@ export default function EnquiresPage() {
                   </td>
                 </tr>
               ))}
+
+              {filteredEnquires.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={10}
+                    className="border-b border-[#edf1ee] px-4 py-10 text-center font-inter text-sm font-medium text-[#68746e]"
+                  >
+                    {status === "loading" ? "Loading enquiries..." : "No enquiries found."}
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
@@ -277,9 +363,13 @@ export default function EnquiresPage() {
                 ["Email", selectedEnquire.email],
                 ["Phone Number", selectedEnquire.phone],
                 ["Service", selectedEnquire.service],
-                ["Event", selectedEnquire.event],
+                ["Package", selectedEnquire.packageName],
+                ["Event Type", selectedEnquire.eventType],
                 ["Event Date", selectedEnquire.eventDate],
+                ["Guest Count", selectedEnquire.guestCount],
+                ["Location", selectedEnquire.location],
                 ["Submitted", selectedEnquire.submitted],
+                ["Responded", selectedEnquire.respondedAt],
                 ["Status", selectedEnquire.status],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-[10px] border border-[#dfe7e2] p-4">
@@ -293,9 +383,20 @@ export default function EnquiresPage() {
               ))}
             </div>
 
+            {selectedEnquire.vendorResponse !== "Not replied yet" ? (
+              <div className="mt-4 rounded-[10px] border border-[#dfe7e2] p-4">
+                <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">
+                  Your Response
+                </p>
+                <p className="mt-2 font-inter text-[15px] leading-7 text-[#16231f]">
+                  {selectedEnquire.vendorResponse}
+                </p>
+              </div>
+            ) : null}
+
             <div className="mt-4 rounded-[10px] border border-[#dfe7e2] p-4">
               <p className="font-inter text-xs font-semibold uppercase tracking-[0.14em] text-[#68746e]">
-                Message
+                Requirements
               </p>
               <p className="mt-2 font-inter text-[15px] leading-7 text-[#16231f]">
                 {selectedEnquire.message}
@@ -355,10 +456,7 @@ export default function EnquiresPage() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setResponseEnquire(null);
-                  setResponseMessage("");
-                }}
+                onClick={sendResponse}
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-[#0D5B46] px-5 py-2.5 font-inter text-sm font-medium text-white transition-colors hover:bg-[#001B12]"
               >
                 <Send className="h-4 w-4" aria-hidden="true" />
@@ -403,4 +501,72 @@ export default function EnquiresPage() {
       ) : null}
     </div>
   );
+}
+
+function mapVendorEnquiry(enquiry: VendorEnquiry): Enquire {
+  const details = getEnquiryDetails(enquiry.message);
+
+  return {
+    id: enquiry.id,
+    customer: enquiry.customer.name,
+    image: "/images/profile-2.png",
+    email: enquiry.customer.email,
+    phone: enquiry.customer.phone ?? "Not provided",
+    service: details.service ?? details.vendor ?? "Quote request",
+    packageName: enquiry.packageName ?? details.packageName ?? "Custom quote",
+    eventType: details.eventType ?? "Not provided",
+    eventDate: details.eventDate ?? "Not provided",
+    guestCount: details.guestCount ?? "Not provided",
+    location: details.location ?? "Not provided",
+    submitted: formatDate(enquiry.createdAt),
+    status: formatStatus(enquiry.status),
+    message: details.requirements ?? details.customerRequest ?? enquiry.message,
+    vendorResponse: enquiry.vendorResponse ?? "Not replied yet",
+    respondedAt: enquiry.respondedAt ? formatDate(enquiry.respondedAt) : "Not replied yet"
+  };
+}
+
+function getEnquiryDetails(message: string) {
+  return {
+    service: getMessageField(message, "Service"),
+    vendor: getMessageField(message, "Vendor"),
+    packageName: getMessageField(message, "Package"),
+    eventType: getMessageField(message, "Event Type"),
+    eventDate: getMessageField(message, "Event Date"),
+    guestCount: getMessageField(message, "Guest Count"),
+    location: getMessageField(message, "Location"),
+    requirements: getMessageField(message, "Requirements"),
+    customerRequest: getCustomerRequest(message)
+  };
+}
+
+function getMessageField(message: string, label: string) {
+  const line = message
+    .split("\n")
+    .find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`));
+
+  return line?.replace(new RegExp(`^${label}:\\s*`, "i"), "").trim() || undefined;
+}
+
+function getCustomerRequest(message: string) {
+  const marker = "Customer request:";
+  const markerIndex = message.toLowerCase().indexOf(marker.toLowerCase());
+
+  if (markerIndex === -1) {
+    return undefined;
+  }
+
+  return message.slice(markerIndex + marker.length).trim() || undefined;
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  }).format(new Date(value));
+}
+
+function formatStatus(value: string) {
+  return value.slice(0, 1).toUpperCase() + value.slice(1);
 }

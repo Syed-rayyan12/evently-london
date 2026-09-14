@@ -3,7 +3,6 @@ import React from "react";
 const TABS = [
   "About",
   "Services",
-  "Packages",
   "Portfolio",
   "Reviews",
   "Availability",
