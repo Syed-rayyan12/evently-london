@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Evently Web App
 
-## Getting Started
+This repository is split into two application folders and deployed as two Railway services from the same source repo.
 
-First, run the development server:
+- `frontend`: Next.js website and dashboards
+- `backend`: Express API, Prisma schema, and database migrations
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Frontend Service
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Railway root directory: `frontend`
+- Framework: Next.js
+- Install command: `npm install`
+- Build command: `npm run build`
+- Start command: `npm run start`
+- Required env:
+  - `NEXT_PUBLIC_API_URL=https://your-backend-service.up.railway.app`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Only `NEXT_PUBLIC_*` values are exposed to the browser. Do not put private secrets in frontend env variables.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Backend Service
 
-## Learn More
+- Railway root directory: `backend`
+- Framework: Node/Express
+- Install command: `npm install`
+- Build command: `npm run build`
+- Start command: `npm run start`
+- Database migration command: `npm run prisma:deploy`
+- Required env:
+  - `NODE_ENV=production`
+  - `DATABASE_URL=postgresql://...`
+  - `PORT=4000`
+  - `CORS_ORIGIN=https://your-frontend-service.up.railway.app`
+  - `ADMIN_EMAIL=your-admin-email@example.com`
+  - `ADMIN_PASSWORD=a-long-random-production-password`
+  - `AUTH_TOKEN_SECRET=a-long-random-production-secret-at-least-32-chars`
+  - `AUTH_TOKEN_TTL_SECONDS=604800`
+  - `JSON_BODY_LIMIT=15mb`
 
-To learn more about Next.js, take a look at the following resources:
+Production startup fails if local/default admin credentials, weak token secrets, wildcard CORS, or localhost CORS are used.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Source Control Safety
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.env*`, `node_modules`, build output, and local logs are ignored. Keep all production secrets in Railway variables only.

@@ -9,9 +9,13 @@ import { HowItWorks } from "@/components/website/how-it-works";
 
 export const dynamic = "force-dynamic";
 
+type VendorProfilePageProps = {
+  params: Promise<{ slug: string }>;
+};
+
 export default async function VendorProfilePage({
   params,
-}: PageProps<"/vendor/[slug]">) {
+}: VendorProfilePageProps) {
   const { slug } = await params;
   const vendor =
     (await getPublicVendorBySlug(slug)
