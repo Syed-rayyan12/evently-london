@@ -19,12 +19,12 @@ app.use(securityHeaders);
 app.use(cors({
   credentials: true,
   origin(origin, callback) {
-    if (!origin && env.NODE_ENV !== "production") {
+    if (!origin) {
       callback(null, true);
       return;
     }
 
-    if (origin && corsOrigins.includes(origin)) {
+    if (corsOrigins.includes(origin)) {
       callback(null, true);
       return;
     }
