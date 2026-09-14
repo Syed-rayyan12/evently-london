@@ -24,7 +24,9 @@ function getApiBaseUrl() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 
   if (apiUrl) {
-    return apiUrl;
+    const absoluteApiUrl = /^https?:\/\//i.test(apiUrl) ? apiUrl : `https://${apiUrl}`;
+
+    return absoluteApiUrl.replace(/\/api\/?$/, "");
   }
 
   if (process.env.NODE_ENV === "production") {
