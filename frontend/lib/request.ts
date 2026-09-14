@@ -1,4 +1,5 @@
 const DEFAULT_API_BASE_URL = "http://localhost:4000";
+const PRODUCTION_API_BASE_URL = "https://ideal-clarity-production.up.railway.app";
 
 type ApiEnvelope<TData> = {
   data?: TData;
@@ -21,7 +22,7 @@ export class ApiRequestError extends Error {
 }
 
 function getApiBaseUrl() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/^['"]|['"]$/g, "");
 
   if (apiUrl) {
     const absoluteApiUrl = /^https?:\/\//i.test(apiUrl) ? apiUrl : `https://${apiUrl}`;
@@ -30,7 +31,7 @@ function getApiBaseUrl() {
   }
 
   if (process.env.NODE_ENV === "production") {
-    throw new Error("NEXT_PUBLIC_API_URL must be set in production");
+    return PRODUCTION_API_BASE_URL;
   }
 
   return DEFAULT_API_BASE_URL;
