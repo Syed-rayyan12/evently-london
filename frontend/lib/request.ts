@@ -21,7 +21,17 @@ export class ApiRequestError extends Error {
 }
 
 function getApiBaseUrl() {
-  return process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+
+  if (apiUrl) {
+    return apiUrl;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("NEXT_PUBLIC_API_URL must be set in production");
+  }
+
+  return DEFAULT_API_BASE_URL;
 }
 
 function getApiUrl(path: string) {
