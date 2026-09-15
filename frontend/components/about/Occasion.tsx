@@ -5,7 +5,7 @@ const occasions = [
   "Thoughtful vendors for every moment",
   "Luxury touches without the stress",
   "Cultural details handled with respect",
-  "Cultural details handled with respect",
+  "Simple tools to save favourites",
   "Support from start to finish",
  
 
