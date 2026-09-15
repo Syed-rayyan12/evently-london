@@ -97,7 +97,7 @@ export default function FeaturedVendorsSection() {
             <div className="mx-auto max-w-[90%]">
                 <div className="flex items-center justify-between">
                     <h2 className="text-3xl font-pt-serif font-normal text-neutral-900 sm:text-4xl">
-                        Featured &amp; Trusted Vendors
+                     Handpicked Vendors You Can Trust
                     </h2>
                     <a
                         href="#"

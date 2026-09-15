@@ -3,40 +3,40 @@ import Link from "next/link";
 
 const celebrations = [
   {
-    name: "Wedding",
+    name: "Weddings",
     image: "/images/wedding.png",
     description:
-      "Plan a refined wedding with vendors for venues, styling, beauty, catering, and photography.",
+      "Elegant vendors for your once in lifetime day.",
   },
   {
-    name: "Engagement",
+    name: "Engagements",
     image: "/images/engagement.png",
     description:
-      "Create an elegant engagement celebration with polished details and trusted local suppliers.",
+      "Intimate celebrations planned with care and beautiful detail.",
   },
   {
-    name: "Mehndi",
+    name: "Mehndi / Sangeet",
     image: "/images/mehndi.png",
     description:
-      "Bring colour, music, decor, and hospitality together for a memorable mehndi event.",
+      "Vibrant traditions honoured with music, colour and joy.",
   },
   {
-    name: "Birthday",
+    name: "Birthdays",
     image: "/images/birthday.png",
     description:
-      "Find creative vendors for birthday styling, entertainment, cakes, venues, and guest experiences.",
+      "Joyful moments created for every age and style.",
   },
   {
-    name: "Baby Shower",
+    name: "Baby Showers",
     image: "/images/baby-shower.png",
     description:
-      "Arrange a warm baby shower with thoughtful decor, catering, photography, and planning support.",
+      "Gentle celebrations to welcome your precious new arrival.",
   },
   {
-    name: "Venue",
+    name: "Religious Events",
     image: "/images/venue.png",
     description:
-      "Explore polished venues with the setting, service, and flow your celebration needs.",
+      "Faith filled ceremonies handled with respect and understanding.",
   },
 ];
 
@@ -62,10 +62,10 @@ export function BrowseByCelebration() {
       <div className="relative z-20 mx-auto max-w-[90%]">
         <div className="mx-auto mb-10 max-w-3xl text-center">
           <h2 className="font-pt-serif text-[44px] font-normal capitalize text-ink sm:text-5xl">
-            Browse by celebration
+Browse By Occasion
           </h2>
           <p className="mt-4 font-inter text-[18px] font-normal text-black">
-            Explore vendors by the celebration you are planning.
+          Browse curated categories for every celebration.
           </p>
         </div>
 

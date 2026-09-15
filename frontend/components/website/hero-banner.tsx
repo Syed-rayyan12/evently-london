@@ -1,12 +1,12 @@
 import {
   CalendarDays,
   Camera,
+  MapPin,
   Music,
   Search,
   Utensils,
-  Wallet,
-  MapPin,
   Users,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { WebsiteHeader } from "./header";
@@ -32,15 +32,15 @@ const slides = [
 ];
 
 const categoryLinks = [
-  { label: "Verified Vendors", icon: Camera },
-  { label: "Quality You Can Trust", icon: Utensils },
-  { label: "Transparent Pricing", icon: Music },
-  { label: "Personalized Support", icon: Users },
+  { label: "Handpicked Vendors", icon: Camera },
+  { label: "Effortless Search", icon: Utensils },
+  { label: "Cultural Insight", icon: Music },
+  { label: "Exclusive Perks", icon: Users },
 ];
 
 export function HeroBanner() {
   return (
-    <section className="relative min-h-[100vh] overflow-hidden bg-ink text-white">
+    <section className="hero-banner-section relative min-h-[100vh] overflow-hidden bg-ink text-white">
       <WebsiteHeader overlay />
 
       <HeroCarousel slides={slides} />
@@ -48,19 +48,17 @@ export function HeroBanner() {
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.72),rgba(0,0,0,0.42)_42%,rgba(0,0,0,0.12))]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.38),rgba(0,0,0,0.02)_38%,rgba(0,0,0,0.46))]" />
 
-      <div className="relative z-10 mx-auto flex min-h-[88vh] w-full max-w-7xl items-center px-5 pb-12 pt-36 lg:min-h-screen lg:px-8 lg:pb-[280px] lg:pt-40">
+      <div className="hero-banner-copy relative z-10 mx-auto flex min-h-[88vh] container-header w-full max-w-7xl items-center px-5 pb-12 pt-36 lg:min-h-screen lg:px-8 lg:pb-[280px] lg:pt-40">
         <div className="max-w-5xl">
           {/* <p className="mb-5 text-sm font-bold uppercase tracking-[0.24em] text-gold">
           Curated Celebrations.<span>Elevated experiences.</span>
 
           </p> */}
           <h1 className="font-pt-serif text-[72px] capitalize font-normal  leading-[1.1] text-white ">
-            Curated Celebrations.<br /><span className="font-pt-serif text-[74px] font-normal capitalize text-gold">Elevated experiences.</span>
+            Celebrate Love In <br /><span className="font-pt-serif text-[74px] font-normal capitalize text-gold">Luxury.</span>
           </h1>
           <p className="mt-7 font-inter font-normal max-w-2xl text-[26px] leading-8 text-white/82 sm:text-xl">
-            A polished landing experience for premium events, built around
-            elegant planning, refined venues, and celebration details that feel
-            considered from the first invite to the final toast.
+           Hire a South Indian wedding planner in London with confidence, bringing life and luxury to your events.
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -82,9 +80,9 @@ export function HeroBanner() {
         </div>
       </div>
 
-      <div className="relative z-20 mx-auto mb-6 w-[calc(100%-40px)] max-w-[90%] rounded-[14px] bg-white p-3 shadow-2xl shadow-black/25 lg:absolute lg:bottom-24 lg:left-1/2 lg:mb-0 lg:-translate-x-1/2">
+      <div className="hero-search-panel relative z-20 mx-auto mb-6  container-sub max-w-[90%] rounded-[14px] bg-white p-3 shadow-2xl shadow-black/25 lg:absolute lg:bottom-24 lg:left-1/2 lg:mb-0 lg:-translate-x-1/2">
         <form>
-          <div className="grid gap-3 px-3 pb-2 pt-8 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+          <div className="hero-search-grid grid gap-3 px-3 pb-2 pt-8 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
             <div>
               <label
                 htmlFor="hero-event-type"
@@ -166,7 +164,7 @@ export function HeroBanner() {
           </div>
         </form>
       </div>
-      <ul className="relative z-20 mx-auto mb-8 grid w-[calc(100%-40px)] max-w-[95%] gap-3 sm:grid-cols-2 lg:absolute lg:bottom-4 lg:left-1/2 lg:mb-0  lg:-translate-x-1/2 lg:grid-cols-4">
+      <ul className="hero-proof-list relative z-20 mx-auto mb-8 grid w-[calc(100%-40px)] max-w-[95%] gap-3 sm:grid-cols-2 lg:absolute lg:bottom-4 lg:left-1/2 lg:mb-0  lg:-translate-x-1/2 lg:grid-cols-4">
         {categoryLinks.map((item) => {
 
           const Icon = item.icon;

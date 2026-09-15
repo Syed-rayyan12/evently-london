@@ -3,27 +3,27 @@ import Image from "next/image";
 const STEPS = [
   {
     icon: "/images/grp-1.png",
-    title: "Tell Us",
+    title: "Create Account",
     description:
-      "It is a Long Established Fact That A Will Be Layout.",
+      "Sign up free and save your favourite vendors.",
   },
   {
     icon: "/images/grp-2.png",
-    title: "Get Matched",
+    title: "Browse Vendors",
     description:
-      "It is a Long Established Fact That A Will Be Layout.",
+      "Explore handpicked vendors matched to your event needs.",
   },
   {
     icon: "/images/grp-3.png",
-    title: "Compare",
+    title: "Save Favourites",
     description:
-      "It is a Long Established Fact That A Will Be Layout.",
+      "Shortlist vendors you love and compare them easily.",
   },
   {
     icon: "/images/grp-4.png",
-    title: "Book & Celebrate",
+    title: "Contact Directly",
     description:
-      "It is a Long Established Fact That A Will Be Layout.",
+      "Reach out and book your vendor with confidence",
   },
 ];
 
@@ -34,10 +34,10 @@ export default function JourneySection() {
       <div className="mx-auto max-w-[87%]">
         <div className="text-center">
           <h2 className="text-[44px] font-pt-serif font-normal text-neutral-900 ">
-            The Journey.
+           How It Works
           </h2>
           <p className=" text-[18px] text-neutral-500 font-inter font-normal leading-[30px]">
-            Simple Steps. Beautiful Celebrations.
+         Finding luxury wedding vendors in London becomes truly simple when you use our trusted platform every single time.
           </p>
         </div>
 

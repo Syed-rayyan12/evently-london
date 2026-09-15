@@ -37,21 +37,13 @@ export default function OurStoryMission() {
                         </h2>
                         <div className=" space-y-4 text-[15px] leading-relaxed text-[#4A4A4A]">
                             <p className="font-inter font-normal text-[18px] text-black/60">
-                                Evently London was created to transform the way people
-                                discover and connect with event professionals.
+                              We wanted to change that completely by building a platform where luxury, trust and personalisation live together beautifully. Whether you need a multi-faith wedding officiant or a Hindu wedding priest in London, we connect you with people who honour your traditions with genuine respect.
                             </p>
                             <p className="font-inter font-normal text-[18px] text-black/60">
-                                Planning an event often means endless searching, comparing
-                                countless suppliers, and spending valuable time trying to
-                                find the right fit. We wanted to create something
-                                different — a platform that combines luxury, trust, and
-                                personalisation.
+                             From weddings and engagements to birthdays and civil ceremonies, our carefully selected vendors share one passion for creating unforgettable experiences. Every celebration deserves more than suppliers because it deserves the right team beside you.
                             </p>
                             <p className="font-inter font-normal text-[18px] text-black/60">
-                                From weddings and engagements to birthdays, concerts, civil
-                                ceremonies, and special celebrations, Evently brings together
-                                carefully selected vendors who share a passion for creating
-                                unforgettable experiences.
+                               Finding a reliable Mandap décor should feel simple, warm and completely reassuring from the very start!
                             </p>
                         </div>
                     </div>
@@ -65,18 +57,12 @@ export default function OurStoryMission() {
                         </h2>
                         <div className=" space-y-4 text-[15px] leading-relaxed text-[#4A4A4A]">
                             <p>
-                                Our mission is to connect people with exceptional event
-                                professionals through a curated and personalised experience.
+                                Our mission is to connect people with exceptional event professionals through a curated and personalised experience. We believe planning should feel exciting rather than overwhelming for anyone celebrating something precious.
                             </p>
                             <p>
-                                We believe event planning should feel exciting, not
-                                overwhelming.
+                              By bringing together trusted vendors, thoughtful recommendations and modern planning tools, we help make every celebration feel effortless from beginning to end.
                             </p>
-                            <p>
-                                By combining trusted vendors, thoughtful recommendations, and
-                                modern planning tools, we help make every celebration feel
-                                effortless from beginning to end.
-                            </p>
+                           
                         </div>
                     </div>
 

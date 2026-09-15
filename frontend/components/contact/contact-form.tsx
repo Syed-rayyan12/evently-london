@@ -12,11 +12,10 @@ export default function SendMessageForm() {
         {/* Form card */}
         <div className="rounded-md border border-[#1F3D34] bg-white p-8">
           <h2 className="mb-1 text-[40px] font-normal font-pt-serif text-[#1f1c17]">
-            Send Us a Message
+           Get In Touch With Us
           </h2>
           <p className="mb-6 text-sm text-[#6b6459]">
-            Fill out the form below and we&apos;ll get back to you as soon as
-            possible.
+         Reach out and our team will respond with warmth and genuine attention.
           </p>
 
           <form className="space-y-5">

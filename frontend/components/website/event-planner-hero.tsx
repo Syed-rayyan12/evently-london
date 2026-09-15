@@ -3,11 +3,11 @@ import { Check } from "lucide-react";
 import { AnimatedShapeImage } from "./animated-shape-image";
 
 const FEATURES = [
-  "Custom Event Planner",
-  "Budget Exclamatory",
-  "Vendor Matching",
-  "Save & Compare",
-  "Checkmates & Reminders",
+  " Thoughtful vendors for every moment",
+  "Luxury touches without the stress",
+  "Cultural details handled with respect",
+  "Simple tools to save favourites",
+  "Support from start to finish",
 ];
 
 const BUDGET_ITEMS = [
@@ -45,24 +45,23 @@ export default function EventPlannerHero() {
           <span className="pointer-events-none absolute -right-5 top-0 hidden h-full  border-amber-400/70 lg:block" />
 
           <p className="text-[20px] font-normal font-inter  text-neutral-500">
-            Plan Smarter, Celebrate Better.
+         Every Celebration Deserves Care
           </p>
 
-          <h1 className="mt-2 text-[44px] font-serif font-normal leading-tight text-neutral-900 ">
-            Built Your Perfect{" "}
+          <h1 className="mt-2 text-[38px] font-serif font-normal leading-tight text-neutral-900 ">
+            Design Your Perfect Celebration{" "}
             <span className="text-[#D79D42]">Event</span>
           </h1>
 
-          <p className="mt-4 max-w-md text-[20px] font-normal font-inter  text-neutral-600">
-            Get Personalised Recommendations, Estimated Budgets And
-            Handpicked Vendors All In One Place.
+          <p className="mt-4 max-w-md text-[18px] font-normal font-inter  text-neutral-600">
+          We help you build a beautiful event with genuine care and beauty, adding meaning to each occasion.
           </p>
 
           <ul className="mt-6 space-y-3">
             {FEATURES.map((feature) => (
               <li
                 key={feature}
-                className="flex items-center gap-3 text-[18px] font-medium text-neutral-600"
+                className="flex items-center gap-3 text-[15px] font-medium text-neutral-600"
               >
             <span className="flex h-5 w-5 text-neutral-600 font-normal items-center justify-center rounded-full border-2 border-[#D79D42]">
                   <Check className="h-3 w-3 text-[#D79D42]" strokeWidth={3} />
@@ -77,7 +76,7 @@ export default function EventPlannerHero() {
             className="btn-slide group mt-8 rounded-md bg-[#D79D42] px-7 py-3 text-sm font-semibold text-white shadow-sm"
           >
             <span className="btn-slide-overlay btn-slide-overlay-green" />
-            <span className="btn-slide-label">Start Building Your Event</span>
+            <span className="btn-slide-label">Let’s Organise Your Event</span>
           </button>
         </div>
 

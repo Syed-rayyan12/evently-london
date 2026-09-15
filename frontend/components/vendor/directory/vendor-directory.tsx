@@ -146,10 +146,10 @@ export default function VendorDirectory() {
         </p>
 
         <h2 className="mb-2 font-pt-serif text-[64px] font-normal text-black">
-          Find The Perfect Vendor
+          Find Your Perfect Vendor
         </h2>
         <p className="mb-6 text-[26px] max-w-xl font-inter font-normal text-gray-500 capitalize">
-          Browse our handpicked and verified vendors who all nale ya cirbraten exceptional
+          Discover trusted professionals who bring your celebration to life with care and style.
         </p>
 
         <div className="mb-6">

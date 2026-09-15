@@ -12,12 +12,7 @@ const blogPostSelect = {
   id: true,
   slug: true,
   title: true,
-  category: true,
-  bannerImage: true,
-  paragraph: true,
-  extraParagraph: true,
-  listTitle: true,
-  listItems: true,
+  sections: true,
   status: true,
   createdAt: true,
   updatedAt: true
@@ -30,7 +25,7 @@ export function listPublicBlogs(): Promise<BlogPostsResponse> {
       select: blogPostSelect,
       orderBy: { createdAt: "desc" }
     })
-    .then((blogs) => ({ blogs }));
+    .then((blogs) => ({ blogs: blogs.map(normalizeBlogPost) }));
 }
 
 export async function getPublicBlogBySlug(slug: string): Promise<BlogPostDetailResponse> {
@@ -46,7 +41,7 @@ export async function getPublicBlogBySlug(slug: string): Promise<BlogPostDetailR
     throw new AppError("Blog post not found", 404);
   }
 
-  return { blog };
+  return { blog: normalizeBlogPost(blog) };
 }
 
 export function listAdminBlogs(): Promise<BlogPostsResponse> {
@@ -55,7 +50,7 @@ export function listAdminBlogs(): Promise<BlogPostsResponse> {
       select: blogPostSelect,
       orderBy: { createdAt: "desc" }
     })
-    .then((blogs) => ({ blogs }));
+    .then((blogs) => ({ blogs: blogs.map(normalizeBlogPost) }));
 }
 
 export async function createAdminBlog(input: BlogPostRequest): Promise<BlogPostDetailResponse> {
@@ -64,18 +59,13 @@ export async function createAdminBlog(input: BlogPostRequest): Promise<BlogPostD
     data: {
       slug,
       title: input.title,
-      category: input.category,
-      bannerImage: input.bannerImage,
-      paragraph: input.paragraph,
-      extraParagraph: input.extraParagraph?.trim() || null,
-      listTitle: input.listTitle?.trim() || null,
-      listItems: input.listItems,
-      status: input.status
+      sections: input.sections,
+      status: "PUBLISHED"
     },
     select: blogPostSelect
   });
 
-  return { blog };
+  return { blog: normalizeBlogPost(blog) };
 }
 
 export async function deleteAdminBlog(blogId: string) {
@@ -112,7 +102,51 @@ export async function updateAdminBlogStatus(
     select: blogPostSelect
   });
 
-  return { blog: updatedBlog };
+  return { blog: normalizeBlogPost(updatedBlog) };
+}
+
+type BlogPostRecord = {
+  id: string;
+  slug: string;
+  title: string;
+  sections: unknown;
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+function normalizeBlogPost(blog: BlogPostRecord): BlogPostResponse {
+  return {
+    ...blog,
+    sections: normalizeSections(blog.sections)
+  };
+}
+
+function normalizeSections(value: unknown): BlogPostResponse["sections"] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((section) => {
+      if (!section || typeof section !== "object") {
+        return null;
+      }
+
+      const record = section as Record<string, unknown>;
+      const title = typeof record.title === "string" ? record.title : "";
+      const paragraph = typeof record.paragraph === "string" ? record.paragraph : "";
+
+      if (!title.trim() && !paragraph.trim()) {
+        return null;
+      }
+
+      return {
+        title,
+        paragraph
+      };
+    })
+    .filter((section): section is BlogPostResponse["sections"][number] => Boolean(section));
 }
 
 function slugify(value: string) {

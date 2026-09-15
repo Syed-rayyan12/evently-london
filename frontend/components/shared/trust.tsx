@@ -3,23 +3,23 @@ import Image from "next/image";
 const TRUST_ITEMS = [
   {
     icon: "/images/ic-1.png",
-    title: "100% Verified Vendors",
-    description: "Every vendor is verified for your peace of mind.",
+    title: "Curated With Care",
+    description: "We handpick vendors who truly care.",
   },
   {
     icon: "/images/ic-2.png",
-    title: "Secure & Private",
-    description: "Your data is safe and protected.",
+    title: "Built For Every Faith",
+    description: "We welcome every culture and tradition.",
   },
   {
     icon: "/images/ic-3.png",
-    title: "Trusted by Thousands",
-    description: "Hundreds of successful celebrations.",
+    title: "Luxury Made Simple",
+    description: "Elegance without any unnecessary stress.",
   },
   {
     icon: "/images/ic-4.png",
-    title: "Dedicated Support",
-    description: "We're here whenever you need us.",
+    title: "Personal Support",
+    description: "Real people helping you every step.",
   },
 ];
 const Trust = () => {

@@ -6,26 +6,20 @@ export type BlogPost = {
   id: string;
   slug: string;
   title: string;
-  category: string;
-  bannerImage: string;
-  paragraph: string;
-  extraParagraph: string | null;
-  listTitle: string | null;
-  listItems: string[];
+  sections: BlogSection[];
   status: BlogStatus;
   createdAt: string;
   updatedAt: string;
 };
 
+export type BlogSection = {
+  title: string;
+  paragraph: string;
+};
+
 export type BlogPostPayload = {
   title: string;
-  category: string;
-  bannerImage: string;
-  paragraph: string;
-  extraParagraph?: string;
-  listTitle?: string;
-  listItems: string[];
-  status: BlogStatus;
+  sections: BlogSection[];
 };
 
 export function listPublicBlogs() {

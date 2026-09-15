@@ -17,12 +17,10 @@ export function InspirationBanner() {
 
       <div className="relative z-10 mx-auto flex min-h-[552px] max-w-[87%] flex-col justify-center pt-24">
         <h1 className="font-pt-serif text-[44px] font-normal leading-tight text-white sm:text-[56px]">
-          Inspiration
+          Ideas That Inspire Every Celebration
         </h1>
         <p className="mt-5 max-w-xl font-inter text-[18px] font-normal leading-8 text-white/82">
-          Explore beautiful celebrations, creative ideas and inspiring event
-          styles to help you discover the perfect vision for your own special
-          occasion.
+         From a church wedding venue in London to Sikh and Muslim event planner management and celebration themes, find ideas that spark your imagination and guide your planning journey.
         </p>
       </div>
     </section>

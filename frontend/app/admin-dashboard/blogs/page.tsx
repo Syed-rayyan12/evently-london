@@ -2,14 +2,12 @@
 
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import {
   Eye,
   Plus,
   Search,
   SlidersHorizontal,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import {
@@ -19,19 +17,19 @@ import {
   updateAdminBlogStatus,
   type BlogPost,
   type BlogPostPayload,
+  type BlogSection,
   type BlogStatus,
 } from "@/lib/blogs";
 import { getAdminSession } from "@/lib/admin-session";
 
+const emptySection: BlogSection = {
+  title: "",
+  paragraph: "",
+};
+
 const defaultForm: BlogPostPayload = {
   title: "",
-  category: "",
-  bannerImage: "/images/blog-1.png",
-  paragraph: "",
-  extraParagraph: "",
-  listTitle: "",
-  listItems: [],
-  status: "PUBLISHED",
+  sections: [{ ...emptySection }],
 };
 
 export default function AdminBlogsPage() {
@@ -42,7 +40,6 @@ export default function AdminBlogsPage() {
   const [deleteBlogItem, setDeleteBlogItem] = useState<BlogPost | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [form, setForm] = useState<BlogPostPayload>(defaultForm);
-  const [listItemsText, setListItemsText] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">("loading");
   const [message, setMessage] = useState("");
 
@@ -50,10 +47,12 @@ export default function AdminBlogsPage() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return blogs.filter((blog) => {
+      const sectionText = blog.sections
+        .map((section) => `${section.title} ${section.paragraph}`)
+        .join(" ");
       const matchesQuery = [
         blog.title,
-        blog.paragraph,
-        blog.category,
+        sectionText,
         blog.status,
         formatDateTime(blog.createdAt),
       ]
@@ -101,23 +100,25 @@ export default function AdminBlogsPage() {
       return;
     }
 
+    const sections = form.sections
+      .map((section) => ({
+        title: section.title.trim(),
+        paragraph: section.paragraph.trim(),
+      }))
+      .filter((section) => section.title && section.paragraph);
+
+    if (!form.title.trim() || !sections.length) {
+      setMessage("Add a blog title and at least one title/paragraph section.");
+      return;
+    }
+
     try {
       setStatus("saving");
       setMessage("");
-      const payload = {
-        ...form,
-        extraParagraph: form.extraParagraph?.trim() || undefined,
-        listTitle: form.listTitle?.trim() || undefined,
-        listItems: listItemsText
-          .split("\n")
-          .map((item) => item.trim())
-          .filter(Boolean),
-      };
-      const result = await createAdminBlog(payload, session.token);
+      const result = await createAdminBlog({ title: form.title.trim(), sections }, session.token);
 
       setBlogs((current) => [result.blog, ...current]);
       setForm(defaultForm);
-      setListItemsText("");
       setIsAddOpen(false);
       setStatus("idle");
     } catch (error) {
@@ -164,13 +165,29 @@ export default function AdminBlogsPage() {
     }
   }
 
-  async function updateNewBlogImage(file: File | undefined) {
-    if (!file) {
-      return;
-    }
+  function updateSection(index: number, field: keyof BlogSection, value: string) {
+    setForm((current) => ({
+      ...current,
+      sections: current.sections.map((section, sectionIndex) =>
+        sectionIndex === index ? { ...section, [field]: value } : section
+      ),
+    }));
+  }
 
-    const image = await readFileAsDataUrl(file);
-    setForm((current) => ({ ...current, bannerImage: image }));
+  function addSection() {
+    setForm((current) => ({
+      ...current,
+      sections: [...current.sections, { ...emptySection }],
+    }));
+  }
+
+  function removeSection(index: number) {
+    setForm((current) => ({
+      ...current,
+      sections: current.sections.length > 1
+        ? current.sections.filter((_, sectionIndex) => sectionIndex !== index)
+        : current.sections,
+    }));
   }
 
   return (
@@ -182,7 +199,7 @@ export default function AdminBlogsPage() {
               Blogs
             </h2>
             <p className="mt-3 max-w-2xl font-inter text-[16px] leading-7 text-[#68746e]">
-              Create blog posts for the site blog page with banner image, paragraph, and detail content.
+              Create blog posts with one main blog title and repeatable title/paragraph sections.
             </p>
           </div>
           <button
@@ -231,10 +248,10 @@ export default function AdminBlogsPage() {
 
       <section className="rounded-[16px] bg-white shadow-lg shadow-[#0D5B46]/10">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1020px] border-separate border-spacing-0 text-left">
+          <table className="w-full min-w-[860px] border-separate border-spacing-0 text-left">
             <thead>
               <tr className="bg-[#f5f7f4]">
-                {["Image", "Title", "Category", "Date", "Status", "Action"].map((heading) => (
+                {["Blog Title", "First Heading", "Date", "Status", "Action"].map((heading) => (
                   <TableHead key={heading}>{heading}</TableHead>
                 ))}
               </tr>
@@ -243,15 +260,12 @@ export default function AdminBlogsPage() {
               {filteredBlogs.length ? filteredBlogs.map((blog) => (
                 <tr key={blog.id}>
                   <td className="border-b border-[#edf1ee] px-4 py-3">
-                    <span className="relative block h-14 w-20 overflow-hidden rounded-[10px] bg-[#f5f7f4]">
-                      <Image src={blog.bannerImage} alt={blog.title} fill sizes="80px" className="object-cover" />
-                    </span>
-                  </td>
-                  <td className="border-b border-[#edf1ee] px-4 py-3">
                     <p className="whitespace-nowrap font-inter text-[14px] font-semibold text-[#16231f]">{blog.title}</p>
-                    <p className="mt-1 max-w-[420px] truncate font-inter text-[12px] font-medium text-gray-700/50">{blog.paragraph}</p>
+                    <p className="mt-1 max-w-[420px] truncate font-inter text-[12px] font-medium text-gray-700/50">
+                      {blog.sections[0]?.paragraph ?? ""}
+                    </p>
                   </td>
-                  <TableCell>{blog.category}</TableCell>
+                  <TableCell>{blog.sections[0]?.title ?? "-"}</TableCell>
                   <TableCell>{formatDateTime(blog.createdAt)}</TableCell>
                   <td className="border-b border-[#edf1ee] px-4 py-3">
                     <StatusBadge status={blog.status} />
@@ -281,7 +295,7 @@ export default function AdminBlogsPage() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center font-inter text-sm font-semibold text-[#68746e]">
+                  <td colSpan={5} className="px-4 py-12 text-center font-inter text-sm font-semibold text-[#68746e]">
                     {status === "loading" ? "Loading blogs..." : "No blogs found. Add your first blog."}
                   </td>
                 </tr>
@@ -294,20 +308,18 @@ export default function AdminBlogsPage() {
       {selectedBlog ? (
         <Modal title="Blog Details" onClose={() => setSelectedBlog(null)}>
           <div className="rounded-[12px] border border-[#dfe7e2] p-4">
-            <div className="flex items-center gap-4">
-              <span className="relative h-16 w-24 flex-none overflow-hidden rounded-[12px] bg-[#f5f7f4]">
-                <Image src={selectedBlog.bannerImage} alt={selectedBlog.title} fill sizes="96px" className="object-cover" />
-              </span>
-              <div>
-                <h3 className="mt-1 font-inter text-[18px] font-semibold text-[#16231f]">{selectedBlog.title}</h3>
-                <p className="font-inter text-[13px] font-semibold text-gray-700/80">{selectedBlog.paragraph}</p>
-              </div>
-            </div>
+            <h3 className="font-inter text-[20px] font-semibold text-[#16231f]">{selectedBlog.title}</h3>
+            <p className="mt-2 font-inter text-[13px] font-semibold text-gray-700/80">
+              {formatDateTime(selectedBlog.createdAt)} | {formatStatus(selectedBlog.status)}
+            </p>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <DetailItem label="Category" value={selectedBlog.category} />
-            <DetailItem label="Created At" value={formatDateTime(selectedBlog.createdAt)} />
-            <DetailItem label="Status" value={formatStatus(selectedBlog.status)} />
+          <div className="mt-4 space-y-4">
+            {selectedBlog.sections.map((section, index) => (
+              <div key={`${section.title}-${index}`} className="rounded-[12px] border border-[#dfe7e2] p-4">
+                <p className="font-inter text-[15px] font-semibold text-[#16231f]">{section.title}</p>
+                <p className="mt-2 font-inter text-[14px] leading-7 text-[#68746e]">{section.paragraph}</p>
+              </div>
+            ))}
           </div>
           <ModalClose onClick={() => setSelectedBlog(null)} />
         </Modal>
@@ -328,59 +340,57 @@ export default function AdminBlogsPage() {
       {isAddOpen ? (
         <Modal title="Add Blog" onClose={() => setIsAddOpen(false)}>
           <form onSubmit={handleCreateBlog}>
-            <div className="mb-5 rounded-[12px] border border-dashed border-[#0D5B46] bg-[#f5f7f4] p-4">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <span className="relative h-24 w-36 flex-none overflow-hidden rounded-[12px] bg-white">
-                  <Image
-                    src={form.bannerImage}
-                    alt="New blog image preview"
-                    fill
-                    sizes="144px"
-                    className="object-cover"
-                  />
-                </span>
-                <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-white px-4 font-inter text-[14px] font-semibold text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white">
-                  <Upload className="h-4 w-4" aria-hidden="true" />
-                  Upload Banner
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => void updateNewBlogImage(event.target.files?.[0])}
-                    className="sr-only"
-                  />
-                </label>
-              </div>
+            <TextInput
+              label="Blog Title"
+              required
+              value={form.title}
+              onChange={(value) => setForm((current) => ({ ...current, title: value }))}
+            />
+
+            <div className="mt-5 space-y-4">
+              {form.sections.map((section, index) => (
+                <div key={index} className="rounded-[12px] border border-[#dfe7e2] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-inter text-[14px] font-semibold text-[#16231f]">
+                      Section {index + 1}
+                    </p>
+                    {form.sections.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={() => removeSection(index)}
+                        className="rounded-md border border-[#dfe7e2] px-3 py-1.5 font-inter text-xs font-semibold text-[#b42318] hover:bg-rose-50"
+                      >
+                        Remove
+                      </button>
+                    ) : null}
+                  </div>
+                  <div className="mt-4 grid gap-4">
+                    <TextInput
+                      label="Title"
+                      required
+                      value={section.title}
+                      onChange={(value) => updateSection(index, "title", value)}
+                    />
+                    <TextArea
+                      label="Paragraph"
+                      required
+                      value={section.paragraph}
+                      onChange={(value) => updateSection(index, "paragraph", value)}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextInput label="Title" value={form.title} onChange={(value) => setForm((current) => ({ ...current, title: value }))} />
-              <TextInput label="Category" value={form.category} onChange={(value) => setForm((current) => ({ ...current, category: value }))} />
-              <label>
-                <span className="font-inter text-[13px] font-semibold text-[#16231f]">Status</span>
-                <select
-                  value={form.status}
-                  onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as BlogStatus }))}
-                  className="mt-2 h-11 w-full rounded-[10px] border border-[#dfe7e2] bg-[#fbfcfa] px-4 font-inter text-[14px] text-[#16231f] outline-none focus:border-[#0D5B46]"
-                >
-                  <option value="PUBLISHED">Published</option>
-                  <option value="DRAFT">Draft</option>
-                  <option value="ARCHIVED">Archived</option>
-                </select>
-              </label>
-              <TextArea label="Main Paragraph" value={form.paragraph} onChange={(value) => setForm((current) => ({ ...current, paragraph: value }))} />
-              <TextArea label="Additional Paragraph" value={form.extraParagraph ?? ""} onChange={(value) => setForm((current) => ({ ...current, extraParagraph: value }))} />
-              <TextInput label="List Title" value={form.listTitle ?? ""} onChange={(value) => setForm((current) => ({ ...current, listTitle: value }))} />
-              <label className="block sm:col-span-2">
-                <span className="font-inter text-[13px] font-semibold text-[#16231f]">List Items</span>
-                <textarea
-                  value={listItemsText}
-                  onChange={(event) => setListItemsText(event.target.value)}
-                  rows={4}
-                  placeholder="One point per line"
-                  className="mt-2 w-full rounded-[10px] border border-[#dfe7e2] bg-[#fbfcfa] px-4 py-3 font-inter text-[14px] text-[#16231f] outline-none focus:border-[#0D5B46]"
-                />
-              </label>
-            </div>
+            <button
+              type="button"
+              onClick={addSection}
+              className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-[#0D5B46] px-4 font-inter text-[13px] font-semibold text-[#0D5B46] transition hover:bg-[#0D5B46] hover:text-white"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add Title & Paragraph
+            </button>
+
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => setIsAddOpen(false)} className="rounded-md border border-[#dfe7e2] px-5 py-2.5 font-inter text-sm font-medium text-[#16231f] hover:bg-[#f5f7f4]">Cancel</button>
               <button type="submit" disabled={status === "saving"} className="rounded-md bg-[#01241D] px-5 py-2.5 font-inter text-sm font-medium text-white hover:bg-[#C07C22] disabled:cursor-not-allowed disabled:opacity-70">
@@ -430,7 +440,7 @@ function TextArea({
   value: string;
 }) {
   return (
-    <label className="block sm:col-span-2">
+    <label className="block">
       <span className="font-inter text-[13px] font-semibold text-[#16231f]">{label}</span>
       <textarea
         required={required}
@@ -449,15 +459,6 @@ function TableHead({ children }: { children: ReactNode }) {
 
 function TableCell({ children }: { children: ReactNode }) {
   return <td className="whitespace-nowrap border-b border-[#edf1ee] px-4 py-3 font-inter text-[13px] font-medium text-[#16231f]">{children}</td>;
-}
-
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[10px] border border-[#dfe7e2] p-4">
-      <p className="font-inter text-[14px] font-medium capitalize tracking-[0.14em] text-black">{label}</p>
-      <p className="mt-1 font-inter text-[14px] font-medium text-gray-700/60">{value}</p>
-    </div>
-  );
 }
 
 function StatusBadge({ status }: { status: BlogStatus }) {
@@ -502,16 +503,6 @@ function Modal({ title, children, onClose }: { title: string; children: ReactNod
       </div>
     </div>
   );
-}
-
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Unable to read image file."));
-    reader.readAsDataURL(file);
-  });
 }
 
 function formatDateTime(value: string) {

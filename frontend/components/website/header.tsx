@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { HeaderRangeMenu } from "./header-range-menu";
 import { WebsiteAuthActions } from "./website-auth-actions";
 
 const navLinks = [
@@ -33,7 +34,7 @@ export function WebsiteHeader({ overlay = false }: WebsiteHeaderProps) {
 
   return (
     <header className={headerClassName}>
-      <div className="mx-auto grid min-h-24 w-full max-w-7xl grid-cols-[auto_1fr] items-center gap-5 px-5 py-4 lg:grid-cols-[auto_1fr_auto] lg:px-8">
+      <div className="mx-auto grid min-h-24 w-full max-w-7xl container-header grid-cols-[auto_1fr] items-center gap-5 px-5 py-4 lg:grid-cols-[auto_1fr_auto] lg:px-8">
         <Link href="/" className="flex items-center gap-3" aria-label="Evently home">
           <Image
             src="/images/site-logo.png"
@@ -46,24 +47,28 @@ export function WebsiteHeader({ overlay = false }: WebsiteHeaderProps) {
         </Link>
 
         <nav
-          className={navClassName}
+          className={`${navClassName} site-primary-nav`}
           aria-label="Primary navigation"
         >
-          {navLinks.map((link) => (
+          {navLinks.map((link, index) => (
             <Link
               key={link.label}
               href={link.href}
-              className={navLinkClassName}
+              className={`${navLinkClassName} ${index >= 4 ? "desktop-range-hidden-link" : ""}`}
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <WebsiteAuthActions
-          loginClassName={loginClassName}
-          signupClassName="btn-slide group h-11 rounded-[10px] bg-gold px-10 font-inter text-[16px] font-normal text-white"
-        />
+        <div className="desktop-range-auth">
+          <WebsiteAuthActions
+            loginClassName={loginClassName}
+            signupClassName="btn-slide group h-11 rounded-[10px] bg-gold px-10 font-inter text-[16px] font-normal text-white"
+          />
+        </div>
+
+        <HeaderRangeMenu links={navLinks} overlay={overlay} />
       </div>
     </header>
   );

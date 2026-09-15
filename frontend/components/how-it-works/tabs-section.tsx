@@ -28,28 +28,28 @@ export default function GetInspiredSection() {
   return (
     <section className="relative w-full overflow-hidden bg-[#faf9f6] px-6  pb-12 md:px-12 lg:px-20">
       {/* decorative floral corners */}
-       <div
-              className="absolute right-0 bottom-10 z-10 animate-shape-float"
-              aria-hidden="true"
-            >
-              <Image
-                src="/images/blog-shape.png"
-                alt=""
-                width={103}
-                height={424}
-                className="h-auto w-auto object-cover"
-              />
-            </div>
+      <div
+        className="absolute right-0 bottom-10 z-10 animate-shape-float"
+        aria-hidden="true"
+      >
+        <Image
+          src="/images/blog-shape.png"
+          alt=""
+          width={103}
+          height={424}
+          className="h-auto w-auto object-cover"
+        />
+      </div>
       <div className="pointer-events-none absolute -top-8 -left-10 h-40 w-40 bg-[url('/images/floral.png')] bg-contain bg-no-repeat opacity-90" />
       <div className="pointer-events-none absolute -bottom-10 -right-10 h-56 w-56 bg-[url('/images/floral.png')] bg-contain bg-no-repeat opacity-90" />
 
       <div className="relative mx-auto max-w-6xl">
         <div className="text-center">
           <h2 className="text-[44px] font-pt-serif font-normal text-black">
-            Get Inspired
+            Discover Event Inspirations
           </h2>
           <p className="mt-2 text-sm text-neutral-500">
-            Ideas, Themes And Real Celebrations
+            Beautiful ideas to spark your celebration planning.
           </p>
         </div>
 
@@ -62,11 +62,10 @@ export default function GetInspiredSection() {
                 key={category}
                 type="button"
                 onClick={() => setActiveCategory(category)}
-                className={`btn-slide group gap-2 rounded-full border px-4 py-1.5 text-sm font-medium ${
-                  isActive
+                className={`btn-slide group gap-2 rounded-full border px-4 py-1.5 text-sm font-medium ${isActive
                     ? "border-[#173d33] bg-[#173d33] text-white"
                     : "border-neutral-300 bg-white text-neutral-600 hover:border-[#173d33]"
-                }`}
+                  }`}
               >
                 <span className={`btn-slide-overlay ${isActive ? "btn-slide-overlay-gold" : "btn-slide-overlay-green"}`} />
                 <span className={`btn-slide-label transition-colors duration-300 ${isActive ? "" : "group-hover:text-white group-focus-visible:text-white"}`}>
@@ -155,7 +154,7 @@ export default function GetInspiredSection() {
               </div>
             </div>
           ))}
-        </div> */} 
+        </div> */}
       </div>
     </section>
   );

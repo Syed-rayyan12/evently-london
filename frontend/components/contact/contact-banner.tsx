@@ -17,11 +17,10 @@ export function ContactBanner() {
 
       <div className="relative z-10 mx-auto flex min-h-[552px] max-w-[87%] flex-col justify-center pt-24">
         <h1 className="font-pt-serif text-[44px] font-normal leading-tight text-white sm:text-[56px]">
-          Contact Us
+We Are Here To Help
         </h1>
         <p className="mt-5 max-w-xl font-inter text-[18px] font-normal leading-8 text-white/82">
-          Speak with our team for vendor support, planning guidance and event
-          enquiries.
+   Whether you need planning advice or vendor support, our friendly team is ready to answer your questions with genuine care.
         </p>
       </div>
     </section>

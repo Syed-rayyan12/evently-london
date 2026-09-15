@@ -1,10 +1,10 @@
 import { Star, Shield, Heart, Users } from "lucide-react";
 import Image from "next/image";
 const values = [
-  { icon: Star, title: "Excellence", description: "We strive to deliver exceptional experiences." },
-  { icon: Shield, title: "Trust", description: "We build confidence through trusted recommendations." },
-  { icon: Heart, title: "Creativity", description: "We celebrate individuality and personal style." },
-  { icon: Users, title: "Connection", description: "We believe the right people create unforgettable moments." },
+  { icon: Star, title: "Care", description: "We treat every celebration as if it were our own special day." },
+  { icon: Shield, title: "Respect", description: "We honour every culture, faith and tradition with genuine understanding." },
+  { icon: Heart, title: "Trust", description: "We only work with vendors who earn your confidence completely." },
+  { icon: Users, title: "Excellence", description: "We hold every vendor to a standard of true quality and beauty" },
 ];
 
 export default function OurValues() {

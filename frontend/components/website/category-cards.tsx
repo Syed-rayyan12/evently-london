@@ -4,27 +4,27 @@ import Link from "next/link";
 
 const categories = [
   {
-    name: "Photography",
+    name: "Weddings",
     image: "/images/Photography.png",
   },
   {
-    name: "Catering",
+    name: "Engagements",
     image: "/images/Catering.png",
   },
   {
-    name: "Venue",
+    name: "Mehndi / Sangeet",
     image: "/images/venue.png",
   },
   {
-    name: "Decor & Styling",
+    name: "Birthdays",
     image: "/images/Decor & Styling.png",
   },
   {
-    name: "Entertainment",
+    name: "Baby Showers",
     image: "/images/Entertainment.png",
   },
   {
-    name: "Makeup Artists",
+    name: "Religious Events",
     image: "/images/Makeup Artists.png",
   },
 ];
@@ -51,10 +51,10 @@ export function CategoryCards() {
         <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="mt-3 font-pt-serif text-[44px] capitalize font-normal text-ink sm:text-5xl">
-              Browse by category
+              Browse By Occasion
             </h2>
             <p className="font-inter text-[18px] font-normal   text-black mt-4">
-             Explore Our Most Popular Event Services
+              Browse curated categories for every celebration.
             </p>
           </div>
 

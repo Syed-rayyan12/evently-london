@@ -2,15 +2,14 @@ import { z } from "zod";
 
 export const blogStatusValidator = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
 
+export const blogSectionValidator = z.object({
+  title: z.string().trim().min(1, "Section title is required"),
+  paragraph: z.string().trim().min(1, "Section paragraph is required")
+});
+
 export const blogPostValidator = z.object({
-  title: z.string().trim().default(""),
-  category: z.string().trim().default(""),
-  bannerImage: z.string().trim().default(""),
-  paragraph: z.string().trim().default(""),
-  extraParagraph: z.string().trim().optional(),
-  listTitle: z.string().trim().optional(),
-  listItems: z.array(z.string().trim()).default([]),
-  status: blogStatusValidator.default("PUBLISHED")
+  title: z.string().trim().min(1, "Blog title is required"),
+  sections: z.array(blogSectionValidator).min(1, "Add at least one section")
 });
 
 export const blogStatusUpdateValidator = z.object({
@@ -18,18 +17,14 @@ export const blogStatusUpdateValidator = z.object({
 });
 
 export type BlogPostRequest = z.infer<typeof blogPostValidator>;
+export type BlogSection = z.infer<typeof blogSectionValidator>;
 export type BlogStatusUpdateRequest = z.infer<typeof blogStatusUpdateValidator>;
 
 export type BlogPostResponse = {
   id: string;
   slug: string;
   title: string;
-  category: string;
-  bannerImage: string;
-  paragraph: string;
-  extraParagraph: string | null;
-  listTitle: string | null;
-  listItems: string[];
+  sections: BlogSection[];
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   createdAt: Date;
   updatedAt: Date;

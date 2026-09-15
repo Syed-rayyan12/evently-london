@@ -3,70 +3,79 @@ import { Star, Quote } from "lucide-react";
 
 const ROW_1 = [
   {
-    name: "Sarah M.",
-    role: "Business Client",
+    name: "Priya Raghunathan",
+    role: "Harrow",
     image: "/images/profile-1.png",
     quote:
-      "It is a long established fact that a reader will be distracted by the readable looking at its layout.",
+      "Evently London truly helped me find a photographer who understood our Tamil traditions completely and captured every single moment beautifully for us.",
     rating: 5,
   },
   {
-    name: "Theresa Jordan",
-    role: "Business Client",
+    name: "Arjun Meenakshi",
+    role: "Wembley",
     image: "/images/profile-2.png",
     quote:
-      "It is a long established fact that a reader will be distracted by the readable looking at its layout.",
+      "Finding a South Indian wedding planner through Evently London felt truly effortless and completely stress free for our entire family.",
     rating: 5,
   },
   {
-    name: "Sarah M.",
-    role: "Business Client",
+    name: "Deepa Krishnan",
+    role: "Ilford",
     image: "/images/profile-3.png",
     quote:
-      "It is a long established fact that a reader will be distracted by the readable looking at its layout.",
+      "I really loved how easy it was to save my favourite vendors and come back to them whenever I needed extra help, especially managing the requirement of mandap and priest.",
     rating: 4,
   },
   {
-    name: "James R.",
-    role: "Business Client",
+    name: "Rajesh Subramanian",
+    role: "Croydon",
     image: "/images/profile-1.png",
     quote:
-      "It is a long established fact that a reader will be distracted by the readable looking at its layout.",
+      "The luxury event décor we found through this platform transformed our reception beautifully and left every single guest truly speechless.",
     rating: 5,
   },
+  {
+    name: "Kavitha Balachandran",
+    role: "Leicester",
+    image: "/images/profile-1.png",
+    quote:
+      "As a Tamil bride I wanted vendors who respected our customs deeply and Evently London truly delivered that for me every time.",
+    rating: 5,
+  },
+  {
+    name: "Suresh Anandakumar",
+    role: "Birmingham",
+    image: "/images/profile-1.png",
+    quote:
+      "Booking our mehndi artist and caterer through Evently London saved us so much precious time and endless worry during our whole planning.",
+    rating: 5,
+  },
+
 ];
 
 const ROW_2 = [
-  {
-    name: "Theresa Jordan",
-    role: "Food Enthusiast",
-    image: "/images/profile-2.png",
-    quote:
-      "It is a long established fact that a reader will be distracted by the readable looking at its layout.",
-    rating: 5,
-  },
-  {
-    name: "Emma M.",
-    role: "Business Client",
-    image: "/images/profile-3.png",
-    quote:
-      "It is a long established fact that a reader will be distracted by the readable looking at its layout.",
-    rating: 4,
-  },
-  {
-    name: "James R.",
-    role: "Business Client",
+   {
+    name: "Rajesh Subramanian",
+    role: "Croydon",
     image: "/images/profile-1.png",
     quote:
-      "It is a long established fact that a reader has been distracted by the readable looking at its layout.",
+      "The luxury event décor we found through this platform transformed our reception beautifully and left every single guest truly speechless.",
     rating: 5,
   },
   {
-    name: "Sarah M.",
-    role: "Business Client",
-    image: "/images/profile-2.png",
+    name: "Kavitha Balachandran",
+    role: "Leicester",
+    image: "/images/profile-1.png",
     quote:
-      "It is a long established fact that a reader will be distracted by the readable looking at its layout.",
+      "As a Tamil bride I wanted vendors who respected our customs deeply and Evently London truly delivered that for me every time.",
+    rating: 5,
+  },
+  {
+    name: "Suresh Anandakumar",
+    role: "Birmingham",
+    image: "/images/profile-1.png",
+    quote:
+      "Booking our mehndi artist and caterer through Evently London saved us so much precious time and endless worry during our whole planning.",
     rating: 5,
   },
 ];
@@ -93,11 +102,10 @@ function TestimonialCard({ name, role, image, quote, rating }: Testimonial) {
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={`h-4 w-4 ${
-                i < rating
+              className={`h-4 w-4 ${i < rating
                   ? "fill-[#D79D42] text-amber-400"
                   : "fill-[#D79D42] text-neutral-200"
-              }`}
+                }`}
             />
           ))}
         </div>
@@ -135,9 +143,8 @@ function MarqueeRow({
   return (
     <div className="group relative w-full overflow-hidden">
       <div
-        className={`flex w-max ${
-          direction === "left" ? "animate-marquee-left" : "animate-marquee-right"
-        } group-hover:[animation-play-state:paused]`}
+        className={`flex w-max ${direction === "left" ? "animate-marquee-left" : "animate-marquee-right"
+          } group-hover:[animation-play-state:paused]`}
         style={{ animationDuration: `${speed}s` }}
       >
         {doubled.map((item, i) => (
@@ -157,11 +164,10 @@ export default function TestimonialsSection() {
     <section className="w-full bg-[#faf9f6] py-16">
       <div className="mx-auto max-w-3xl px-6 text-center">
         <h2 className="text-[44px] font-pt-serif font-normal text-neutral-900">
-          What Our Clients Say
+          Loved By Couples Across London
         </h2>
         <p className="mt-3 text-[16px] font-inter font-normal leading-relaxed text-neutral-500">
-          It is a long established fact that a reader will be distracted by
-          the readable content of a page when looking at its layout.
+          When you search for luxury event décor in London, our clients share what truly made their day special.
         </p>
       </div>
 

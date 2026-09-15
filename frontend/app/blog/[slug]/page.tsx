@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, CalendarDays } from "lucide-react";
@@ -52,15 +51,8 @@ export default function BlogDetailPage() {
       <main className="bg-[#F9F8F4]">
         <section className="relative min-h-[520px] overflow-hidden text-white">
           <WebsiteHeader overlay />
-          <Image
-            src={blog?.bannerImage ?? "/images/work-banner.png"}
-            alt={blog?.title ?? "Blog banner"}
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-black/35" />
+          <div className="absolute inset-0 bg-[#001B12]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.52),rgba(0,0,0,0.18))]" />
           <div className="relative z-10 mx-auto flex min-h-[520px] max-w-[87%] flex-col justify-center pt-24">
             <Link
               href="/blog"
@@ -76,11 +68,6 @@ export default function BlogDetailPage() {
             <h1 className="mt-4 max-w-4xl font-pt-serif text-[42px] font-normal leading-tight text-white sm:text-[58px]">
               {blog?.title ?? (status === "loading" ? "Loading blog..." : "Blog not found")}
             </h1>
-            {blog ? (
-              <p className="mt-5 font-inter text-[15px] font-semibold uppercase tracking-[3px] text-[#D79D42]">
-                {blog.category}
-              </p>
-            ) : null}
           </div>
         </section>
 
@@ -88,31 +75,16 @@ export default function BlogDetailPage() {
           <article className="mx-auto max-w-4xl">
             {blog ? (
               <div className="space-y-8">
-                <p className="font-inter text-[18px] leading-9 text-[#4d5a54]">
-                  {blog.paragraph}
-                </p>
-
-                {blog.extraParagraph ? (
-                  <p className="font-inter text-[18px] leading-9 text-[#4d5a54]">
-                    {blog.extraParagraph}
-                  </p>
-                ) : null}
-
-                {blog.listItems.length ? (
-                  <div className="rounded-[12px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
-                    <h2 className="font-pt-serif text-[28px] font-normal text-[#16231f]">
-                      {blog.listTitle || "Key Points"}
+                {blog.sections.map((section, index) => (
+                  <section key={`${section.title}-${index}`} className="rounded-[12px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
+                    <h2 className="font-pt-serif text-[30px] font-normal text-[#16231f]">
+                      {section.title}
                     </h2>
-                    <ul className="mt-5 space-y-3">
-                      {blog.listItems.map((item) => (
-                        <li key={item} className="flex gap-3 font-inter text-[16px] leading-7 text-[#4d5a54]">
-                          <span className="mt-2 h-2 w-2 flex-none rounded-full bg-[#C07C22]" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
+                    <p className="mt-4 font-inter text-[18px] leading-9 text-[#4d5a54]">
+                      {section.paragraph}
+                    </p>
+                  </section>
+                ))}
               </div>
             ) : (
               <p className="rounded-[12px] border border-dashed border-[#dfe7e2] bg-white px-4 py-12 text-center font-inter text-sm font-semibold text-[#68746e]">

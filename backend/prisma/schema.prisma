@@ -76,18 +76,13 @@ model Notification {
 }
 
 model BlogPost {
-  id             String     @id @default(cuid())
-  slug           String     @unique
-  title          String
-  category       String
-  bannerImage    String
-  paragraph      String
-  extraParagraph String?
-  listTitle      String?
-  listItems      String[]
-  status         BlogStatus @default(PUBLISHED)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id        String     @id @default(cuid())
+  slug      String     @unique
+  title     String
+  sections  Json       @default("[]")
+  status    BlogStatus @default(PUBLISHED)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   @@index([status, createdAt])
 }

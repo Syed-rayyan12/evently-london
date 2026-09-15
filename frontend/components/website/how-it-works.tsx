@@ -2,23 +2,23 @@ import Image from "next/image";
 
 const STEPS = [
   {
-    title: "Tell Us Your Plan",
-    description: "It is a long established fact that a  will be layout.",
+    title: "Create Account",
+    description: "Sign up free and save your favourite vendors.",
     icon: "/images/grp-1.png",
   },
   {
-    title: "Explore Services",
-    description: "It is a long established fact that a  will be layout.",
+    title: "Browse Vendors",
+    description: "Explore handpicked vendors matched to your event needs.",
     icon: "/images/grp-2.png",
   },
   {
-    title: "Match With Vendors",
-    description: "It is a long established fact that a  will be layout.",
+    title: "Save Favourites",
+    description: "Shortlist vendors you love and compare them easily.",
     icon: "/images/grp-3.png",
   },
   {
-    title: "Celebrate Better",
-    description: "It is a long established fact that a  will be layout.",
+    title: "Contact Directly",
+    description: "Reach out and book your vendor with confidence",
     icon: "/images/grp-4.png",
   },
 ];
@@ -42,8 +42,7 @@ export function HowItWorks() {
             How It Works
           </h2>
           <p className="mt-4 font-inter text-[18px] font-normal leading-7 text-white/82">
-            Plan your event step by step with clear choices, trusted vendors,
-            and a smoother path from idea to celebration.
+           Finding luxury wedding vendors in London becomes truly simple when you use our trusted platform every single time.
           </p>
         </div>
 

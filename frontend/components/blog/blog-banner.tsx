@@ -17,11 +17,10 @@ export function BlogBanner() {
 
       <div className="relative z-10 mx-auto flex min-h-[552px] max-w-[87%] flex-col justify-center pt-24">
         <h1 className="font-pt-serif text-[44px] font-normal leading-tight text-white sm:text-[56px]">
-          Blogs
+       Stories, Tips and Inspiration
         </h1>
         <p className="mt-5 max-w-xl font-inter text-[18px] font-normal leading-8 text-white/82">
-          Explore expert planning tips, celebration ideas and event inspiration
-          for creating a polished, memorable occasion.
+       Our blog shares honest advice on planning, culture and choosing vendors who truly care about your special day.
         </p>
       </div>
     </section>

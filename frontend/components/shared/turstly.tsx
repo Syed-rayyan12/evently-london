@@ -2,22 +2,22 @@ import Image from "next/image";
 
 const REASONS = [
     {
-        title: "100% Verified Vendors",
-        description: "Every vendor is carefully verified for your peace of mind.",
+        title: "Trusted Vendors",
+        description: "Every professional on our platform is checked carefully before joining",
     },
     {
-        title: "Quality You Can Trust",
+        title: "Cultural Understanding",
         description:
-            "Discover professionals with services and experiences you can rely on.",
+            "We respect your traditions and match you with vendors who understand them.",
     },
     {
-        title: "Transparent Pricing",
+        title: "Effortless Planning",
         description:
-            "Explore available pricing and packages before making your decision.",
+            "Our tools help you save, compare and contact vendors without any stress.",
     },
     {
-        title: "Personalised Support",
-        description: "We're here to make your planning journey easier.",
+        title: "Luxury Experience",
+        description: "Every vendor is chosen for quality, elegance and genuine attention to detail.",
     },
 ];
 
@@ -43,10 +43,10 @@ export default function Why() {
             <div className="relative mx-auto max-w-[87%]">
                 <div className="text-center">
                     <p className="text-[16px] font-medium capitalize tracking-widest text-gold">
-                        Why Evently
+                Why Choose Us?
                     </p>
                     <h2 className="mt-0 text-[44px] font-pt-serif font-normal text-neutral-900 ">
-                        Why Choose Evently?
+                     Reasons To Celebrate With Evently
                     </h2>
                 </div>
 

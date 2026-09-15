@@ -4,9 +4,9 @@ import { CheckCircle2 } from "lucide-react";
 import { AnimatedShapeImage } from "./animated-shape-image";
 
 const CTA_FEATURES = [
-    "Professional Guidance",
-    "Expert Recommendations",
-    "Save Time & Prestige",
+    "Free Signup",
+    "Verified Vendors",
+    "Easy Contact",
 ];
 
 const EXPLORE_LINKS = [
@@ -19,6 +19,8 @@ const COMPANY_LINKS = [
     { label: "About Us", href: "/about" },
     { label: "Contact Us", href: "/contact" },
     { label: "Blogs", href: "/blog" },
+    { label: "Privacy Policy", href: "/privacy-policy" },
+    { label: "Terms & Conditions", href: "/terms-and-conditions" },
 ];
 const VENDOR_LINKS = [
     { label: "Join Vendor", href: "/contact" },
@@ -74,11 +76,10 @@ export default function CtaAndFooter() {
 
                     <div className="max-w-2xl">
                         <h2 className="text-[34px] font-pt-serif  font-normal text-gold">
-                            Need Help Planning Your Event?
+                        Start Planning Your Perfect Day Today!
                         </h2>
                         <p className="mt-2 max-w-md text-[16px] font-inter leading-relaxed text-white/70">
-                            Our Event Experts Are Here To Help Bring Every Detail Of Your
-                            Orientation To Life.
+                           Join Evently London today and find vendors who truly care.
                         </p>
 
                         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
@@ -99,7 +100,7 @@ export default function CtaAndFooter() {
                         className="btn-slide group flex-none whitespace-nowrap rounded-md bg-gold px-12 py-3.5 text-sm font-semibold text-white lg:justify-self-end"
                     >
                         <span className="btn-slide-overlay btn-slide-overlay-green" />
-                        <span className="btn-slide-label">Speak To A Consultant</span>
+                        <span className="btn-slide-label">Create Your Free Account</span>
                     </Link>
                 </div>
             </div>
@@ -119,7 +120,7 @@ export default function CtaAndFooter() {
                             />
                         </div>
                         <p className="mt-3 text-sm leading-relaxed font-normal font-inter text-[18px] text-white">
-                            Vendors Celebrations Drives Experience
+                          Your Celebration Beautifully Planned
                         </p>
                     </div>
 

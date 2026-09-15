@@ -19,11 +19,10 @@ export function CelebrationBanner() {
 
       <div className="relative z-10 mx-auto flex min-h-[552px] max-w-[87%] flex-col justify-center pt-24">
         <h1 className="font-pt-serif text-[44px] font-normal leading-tight text-white sm:text-[56px]">
-          Celebrations
+          Celebrations For Every Moment
         </h1>
         <p className="mt-5 max-w-xl font-inter text-[18px] font-normal leading-8 text-white/82">
-          Explore beautiful celebration styles, trusted vendors, and thoughtful
-          planning ideas for every special occasion.
+          Whether you need an interfaith wedding planner or a vendor for any joyful occasion, we help you celebrate beautifully.
         </p>
       </div>
     </section>

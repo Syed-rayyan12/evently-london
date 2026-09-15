@@ -2,14 +2,13 @@ import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 
 const occasions = [
-  "Weddings",
-  "Engagements",
-  "Birthdays",
-  "Civil Ceremonies",
-  "Concerts",
-  "Baby Shower",
-  "Bridal Showers",
-  "Private Events",
+  "Thoughtful vendors for every moment",
+  "Luxury touches without the stress",
+  "Cultural details handled with respect",
+  "Cultural details handled with respect",
+  "Support from start to finish",
+ 
+
 ];
 
 export default function CelebratingEveryOccasion() {
@@ -28,11 +27,10 @@ export default function CelebratingEveryOccasion() {
 
         <div>
           <h2 className="font-serif text-[44px] text-[#1C1C1C] font-normal ">
-            Celebrating Every Occasion
+           Design Your Perfect Celebration
           </h2>
           <p className=" text-[15px] leading-relaxed text-[#4A4A4A]">
-            Evently supports a wide range of celebrations, helping clients
-            discover trusted professionals for every meaningful moment.
+        We help you build a beautiful event with genuine care and beauty, adding meaning to each occasion.
           </p>
 
           <ul className="mt-6 space-y-3">

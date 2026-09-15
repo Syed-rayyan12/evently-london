@@ -25,10 +25,17 @@ export default function IntroSection() {
                         className="object-cover"
                     />
                 </div>
-
+                <div>
+                 <h2 className="font-serif text-[44px] text-black font-normal">
+                          Our Promise
+                        </h2>
                 <p className="text-base leading-relaxed text-neutral-600 sm:text-lg">
-                    Planning your perfect celebration doesn’t have to be complicated. Evently London brings everything together in one simple place, helping you discover trusted vendors, explore their services and packages, compare your options, send enquiries, and manage your bookings with confidence. From your first idea to the moment you celebrate, we make every step easier.
+                   We understand that every celebration carries its own meaning and needs careful attention. Whether you need a Sikh wedding planner who respects your traditions or a Gurdwara wedding venue in London that feels right for your family, we help you find it.
                 </p>
+                  <p className="text-base leading-relaxed text-neutral-600 sm:text-lg">
+                  Our platform also connects you with trusted Pooja ceremony organisers who handle sacred rituals with genuine care. Every step is built to save your time and protect your peace of mind. You deserve a planning journey that feels calm, clear and completely supported from beginning to end.
+                </p>
+                </div>
             </div>
         </section>
     );

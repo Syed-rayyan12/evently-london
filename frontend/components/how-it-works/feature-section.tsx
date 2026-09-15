@@ -5,27 +5,27 @@ import Image from "next/image";
 const FEATURES = [
     {
         icon: Search,
-        title: "Find Trusted Vendors",
+        title: "Vendor Discovery",
         description:
-            "Discover professionals across every important part of your celebration.",
+            "Find trusted professionals across every category you need.",
     },
     {
         icon: LayoutGrid,
-        title: "Compare With Confidence",
+        title: "Smart Saving",
         description:
-            "Explore profiles, services, packages, portfolios and reviews before making your choice.",
+            "Shortlist your favourite vendors and compare them side by side.",
     },
     {
         icon: ClipboardList,
-        title: "Keep Your Plans Organised",
+        title: "Direct Contact",
         description:
-            "Manage your events, saved vendors, enquiries and bookings from your Customer Dashboard.",
+            "Reach out to vendors quickly without any middle steps.",
     },
     {
         icon: PartyPopper,
-        title: "Celebrate With Confidence",
+        title: "Planning Support",
         description:
-            "From your first search to the final celebration, Evently keeps your planning journey simple.",
+            "Get guidance whenever you need help along the way.",
     },
 ];
 
@@ -50,10 +50,10 @@ export default function FeaturesSection() {
             <div className="relative mx-auto max-w-6xl">
                 <div className="text-center">
                     <p className="text-[16px]  font-medium capitalize tracking-widest text-gold">
-                        All In One Place
+                       One Platform For Every Celebration
                     </p>
                     <h2 className="mt-0 text-[44px] font-pt-serif font-normal text-neutral-900 ">
-                        Everything You Need in One Place
+                        All Your Event Needs Together
                     </h2>
                 </div>
 
