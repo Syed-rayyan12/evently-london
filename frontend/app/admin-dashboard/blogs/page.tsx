@@ -35,6 +35,8 @@ const defaultForm: BlogPostPayload = {
   sections: [{ ...emptySection }],
 };
 
+const blogFormDebugMarker = "admin-blogs-form-v3-image-sections-2026-09-16";
+
 export default function AdminBlogsPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [query, setQuery] = useState("");
@@ -207,7 +209,7 @@ export default function AdminBlogsPage() {
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-7" data-blog-form-version={blogFormDebugMarker}>
       <section className="rounded-[16px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
