@@ -2,12 +2,14 @@
 
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import {
   Eye,
   Plus,
   Search,
   SlidersHorizontal,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import {
@@ -29,6 +31,7 @@ const emptySection: BlogSection = {
 
 const defaultForm: BlogPostPayload = {
   title: "",
+  bannerImage: "/images/blog-1.png",
   sections: [{ ...emptySection }],
 };
 
@@ -115,7 +118,11 @@ export default function AdminBlogsPage() {
     try {
       setStatus("saving");
       setMessage("");
-      const result = await createAdminBlog({ title: form.title.trim(), sections }, session.token);
+      const result = await createAdminBlog({
+        title: form.title.trim(),
+        bannerImage: form.bannerImage,
+        sections,
+      }, session.token);
 
       setBlogs((current) => [result.blog, ...current]);
       setForm(defaultForm);
@@ -188,6 +195,15 @@ export default function AdminBlogsPage() {
         ? current.sections.filter((_, sectionIndex) => sectionIndex !== index)
         : current.sections,
     }));
+  }
+
+  async function updateNewBlogImage(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    const image = await readFileAsDataUrl(file);
+    setForm((current) => ({ ...current, bannerImage: image }));
   }
 
   return (
@@ -340,6 +356,30 @@ export default function AdminBlogsPage() {
       {isAddOpen ? (
         <Modal title="Add Blog" onClose={() => setIsAddOpen(false)}>
           <form onSubmit={handleCreateBlog}>
+            <div className="mb-5 rounded-[12px] border border-dashed border-[#0D5B46] bg-[#f5f7f4] p-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <span className="relative h-24 w-36 flex-none overflow-hidden rounded-[12px] bg-white">
+                  <Image
+                    src={form.bannerImage}
+                    alt="New blog image preview"
+                    fill
+                    sizes="144px"
+                    className="object-cover"
+                  />
+                </span>
+                <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-white px-4 font-inter text-[14px] font-semibold text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white">
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                  Upload Image
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => void updateNewBlogImage(event.target.files?.[0])}
+                    className="sr-only"
+                  />
+                </label>
+              </div>
+            </div>
+
             <TextInput
               label="Blog Title"
               required
@@ -503,6 +543,16 @@ function Modal({ title, children, onClose }: { title: string; children: ReactNod
       </div>
     </div>
   );
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Unable to read image file."));
+    reader.readAsDataURL(file);
+  });
 }
 
 function formatDateTime(value: string) {

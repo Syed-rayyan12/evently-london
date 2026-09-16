@@ -7,11 +7,22 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import { AnimatedShapeImage } from "@/components/website/animated-shape-image";
 import { listPublicBlogs, type BlogPost } from "@/lib/blogs";
 
-function BlogCard({ createdAt, sections, slug, title }: BlogPost) {
+function BlogCard({ bannerImage, createdAt, sections, slug, title }: BlogPost) {
   const firstSection = sections[0];
 
   return (
-    <article className="flex h-full flex-col rounded-[12px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
+    <article className="flex h-full flex-col rounded-[12px] bg-white shadow-lg shadow-[#0D5B46]/10">
+      <div className="relative h-52 w-full overflow-hidden rounded-t-[12px]">
+        <Image
+          src={bannerImage}
+          alt={title}
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover"
+        />
+      </div>
+
+      <div className="flex flex-1 flex-col p-6">
       <div className="mt-4 flex items-center gap-1.5 font-inter text-xs font-normal tracking-[3px] text-neutral-500">
         <CalendarDays className="h-3.5 w-3.5 text-gold" aria-hidden="true" />
         {formatDateTime(createdAt)}
@@ -32,6 +43,7 @@ function BlogCard({ createdAt, sections, slug, title }: BlogPost) {
         <span className="text-hover-underline">Read More</span>
         <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1.5" aria-hidden="true" />
       </Link>
+      </div>
     </article>
   );
 }

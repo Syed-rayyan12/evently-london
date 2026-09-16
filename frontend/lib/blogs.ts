@@ -6,6 +6,7 @@ export type BlogPost = {
   id: string;
   slug: string;
   title: string;
+  bannerImage: string;
   sections: BlogSection[];
   status: BlogStatus;
   createdAt: string;
@@ -19,6 +20,7 @@ export type BlogSection = {
 
 export type BlogPostPayload = {
   title: string;
+  bannerImage: string;
   sections: BlogSection[];
 };
 

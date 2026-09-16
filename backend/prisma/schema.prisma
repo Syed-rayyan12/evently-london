@@ -79,6 +79,7 @@ model BlogPost {
   id        String     @id @default(cuid())
   slug      String     @unique
   title     String
+  bannerImage String
   sections  Json       @default("[]")
   status    BlogStatus @default(PUBLISHED)
   createdAt DateTime   @default(now())

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, CalendarDays } from "lucide-react";
@@ -51,7 +52,14 @@ export default function BlogDetailPage() {
       <main className="bg-[#F9F8F4]">
         <section className="relative min-h-[520px] overflow-hidden text-white">
           <WebsiteHeader overlay />
-          <div className="absolute inset-0 bg-[#001B12]" />
+          <Image
+            src={blog?.bannerImage ?? "/images/work-banner.png"}
+            alt={blog?.title ?? "Blog banner"}
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.52),rgba(0,0,0,0.18))]" />
           <div className="relative z-10 mx-auto flex min-h-[520px] max-w-[87%] flex-col justify-center pt-24">
             <Link

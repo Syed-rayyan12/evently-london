@@ -9,6 +9,7 @@ export const blogSectionValidator = z.object({
 
 export const blogPostValidator = z.object({
   title: z.string().trim().min(1, "Blog title is required"),
+  bannerImage: z.string().trim().min(1, "Blog image is required"),
   sections: z.array(blogSectionValidator).min(1, "Add at least one section")
 });
 
@@ -24,6 +25,7 @@ export type BlogPostResponse = {
   id: string;
   slug: string;
   title: string;
+  bannerImage: string;
   sections: BlogSection[];
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   createdAt: Date;

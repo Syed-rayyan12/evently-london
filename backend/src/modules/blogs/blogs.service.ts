@@ -12,6 +12,7 @@ const blogPostSelect = {
   id: true,
   slug: true,
   title: true,
+  bannerImage: true,
   sections: true,
   status: true,
   createdAt: true,
@@ -59,6 +60,7 @@ export async function createAdminBlog(input: BlogPostRequest): Promise<BlogPostD
     data: {
       slug,
       title: input.title,
+      bannerImage: input.bannerImage,
       sections: input.sections,
       status: "PUBLISHED"
     },
@@ -109,6 +111,7 @@ type BlogPostRecord = {
   id: string;
   slug: string;
   title: string;
+  bannerImage: string;
   sections: unknown;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   createdAt: Date;
