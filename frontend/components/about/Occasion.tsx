@@ -9,6 +9,7 @@ const occasions = [
   "Support from start to finish",
  
 
+  
 ];
 
 export default function CelebratingEveryOccasion() {
