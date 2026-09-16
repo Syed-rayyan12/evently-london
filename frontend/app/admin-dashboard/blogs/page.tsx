@@ -369,7 +369,7 @@ export default function AdminBlogsPage() {
                 </span>
                 <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-white px-4 font-inter text-[14px] font-semibold text-[#0D5B46] transition-colors hover:bg-[#0D5B46] hover:text-white">
                   <Upload className="h-4 w-4" aria-hidden="true" />
-                  Upload Image
+                  Upload Blog Image
                   <input
                     type="file"
                     accept="image/*"
