@@ -9,8 +9,30 @@ export const blogSectionValidator = z.object({
 
 export const blogPostValidator = z.object({
   title: z.string().trim().min(1, "Blog title is required"),
-  bannerImage: z.string().trim().min(1, "Blog image is required"),
-  sections: z.array(blogSectionValidator).min(1, "Add at least one section")
+  bannerImage: z.string().trim().min(1, "Blog image is required").default("/images/blog-1.png"),
+  paragraph: z.string().trim().optional(),
+  sections: z.array(blogSectionValidator).optional()
+}).transform((input, context) => {
+  const sections = input.sections?.length
+    ? input.sections
+    : input.paragraph
+      ? [{ title: input.title, paragraph: input.paragraph }]
+      : [];
+
+  if (!sections.length) {
+    context.addIssue({
+      code: "custom",
+      message: "Add at least one section"
+    });
+
+    return z.NEVER;
+  }
+
+  return {
+    title: input.title,
+    bannerImage: input.bannerImage,
+    sections
+  };
 });
 
 export const blogStatusUpdateValidator = z.object({
