@@ -43,6 +43,7 @@ export default function AdminBlogsClient() {
   const [deleteBlogItem, setDeleteBlogItem] = useState<BlogPost | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [form, setForm] = useState<BlogPostPayload>(defaultForm);
+  const [deploymentTestField, setDeploymentTestField] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">("loading");
   const [message, setMessage] = useState("");
 
@@ -386,6 +387,14 @@ export default function AdminBlogsClient() {
               value={form.title}
               onChange={(value) => setForm((current) => ({ ...current, title: value }))}
             />
+
+            <div className="mt-4">
+              <TextInput
+                label="Deployment Test Field"
+                value={deploymentTestField}
+                onChange={setDeploymentTestField}
+              />
+            </div>
 
             <div className="mt-5 space-y-4">
               {form.sections.map((section, index) => (
