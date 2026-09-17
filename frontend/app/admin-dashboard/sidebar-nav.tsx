@@ -29,7 +29,7 @@ const sidebarLinks = [
   },
   { label: "Bookings", href: "/admin-dashboard/bookings", icon: CalendarCheck2 },
   { label: "Reviews", href: "/admin-dashboard/reviews", icon: Star },
-  { label: "Blogs", href: "/admin-dashboard/blog-posts", icon: BookOpenText },
+  { label: "Blogs", href: "/admin-dashboard/blogs", icon: BookOpenText },
   { label: "Analytics", href: "/admin-dashboard/analytics", icon: BarChart3 },
   { label: "Settings", href: "/admin-dashboard/settings", icon: Settings },
 ];
