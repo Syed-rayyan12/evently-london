@@ -43,6 +43,7 @@ export default function AdminBlogsClient() {
   const [deleteBlogItem, setDeleteBlogItem] = useState<BlogPost | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [form, setForm] = useState<BlogPostPayload>(defaultForm);
+  const [railwayTestField, setRailwayTestField] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">("loading");
   const [message, setMessage] = useState("");
 
@@ -386,6 +387,14 @@ export default function AdminBlogsClient() {
               value={form.title}
               onChange={(value) => setForm((current) => ({ ...current, title: value }))}
             />
+
+            <div className="mt-4">
+              <TextInput
+                label="Railway Test Field"
+                value={railwayTestField}
+                onChange={setRailwayTestField}
+              />
+            </div>
 
             <div className="mt-5 space-y-4">
               {form.sections.map((section, index) => (
