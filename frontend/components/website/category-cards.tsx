@@ -17,7 +17,7 @@ const categories = [
   },
   {
     name: "Birthdays",
-    image: "/images/Decor & Styling.png",
+    image: "/images/decor-1.png",
   },
   {
     name: "Baby Showers",
@@ -40,7 +40,7 @@ export function CategoryCards() {
         aria-hidden="true"
       >
         <Image
-          src="/images/flower.png"
+          src="/images/flower-1.png"
           alt=""
           width={103}
           height={424}

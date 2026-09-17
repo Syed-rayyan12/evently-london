@@ -88,7 +88,7 @@ export default function FeaturedVendorsSection() {
         <section className="w-full 
      px-6 py-16  relative">
             <AnimatedShapeImage
-                src="/images/flower.png"
+                src="/images/flower-1.png"
                 width={103}
                 height={424}
                 className="absolute left-0 top-0 z-10"
