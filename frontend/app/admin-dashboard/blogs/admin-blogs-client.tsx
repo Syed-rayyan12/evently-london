@@ -32,6 +32,7 @@ const emptySection: BlogSection = {
 const defaultForm: BlogPostPayload = {
   title: "",
   bannerImage: "/images/blog-1.png",
+  railwayTestField: "",
   sections: [{ ...emptySection }],
 };
 
@@ -43,7 +44,6 @@ export default function AdminBlogsClient() {
   const [deleteBlogItem, setDeleteBlogItem] = useState<BlogPost | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [form, setForm] = useState<BlogPostPayload>(defaultForm);
-  const [railwayTestField, setRailwayTestField] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "saving" | "error">("loading");
   const [message, setMessage] = useState("");
 
@@ -122,6 +122,7 @@ export default function AdminBlogsClient() {
       const result = await createAdminBlog({
         title: form.title.trim(),
         bannerImage: form.bannerImage,
+        railwayTestField: form.railwayTestField.trim(),
         sections,
       }, session.token);
 
@@ -391,8 +392,8 @@ export default function AdminBlogsClient() {
             <div className="mt-4">
               <TextInput
                 label="Railway Test Field"
-                value={railwayTestField}
-                onChange={setRailwayTestField}
+                value={form.railwayTestField}
+                onChange={(value) => setForm((current) => ({ ...current, railwayTestField: value }))}
               />
             </div>
 

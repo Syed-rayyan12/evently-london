@@ -21,6 +21,7 @@ export type BlogSection = {
 export type BlogPostPayload = {
   title: string;
   bannerImage: string;
+  railwayTestField: string;
   sections: BlogSection[];
 };
 
