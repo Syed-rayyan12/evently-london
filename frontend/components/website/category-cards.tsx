@@ -40,7 +40,7 @@ export function CategoryCards() {
         aria-hidden="true"
       >
         <Image
-          src="/images/flower-1.png"
+          src="/images/how-shape.png"
           alt=""
           width={103}
           height={424}
