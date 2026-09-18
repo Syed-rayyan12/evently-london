@@ -16,13 +16,13 @@ export function AnimatedShapeImage({
   imageClassName,
 }: AnimatedShapeImageProps) {
   return (
-    <div className={`${className} animate-shape-float`} aria-hidden="true">
+    <div className={`${className} pointer-events-none max-w-full animate-shape-float`} aria-hidden="true">
       <Image
         src={src}
         alt=""
         width={width}
         height={height}
-        className={imageClassName}
+        className={`${imageClassName} select-none`}
       />
     </div>
   );

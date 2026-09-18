@@ -97,7 +97,7 @@ export default function BlogSection({ className = "" }: BlogSectionProps) {
   }, []);
 
   return (
-    <section id="Blogs" className={`relative w-full bg-[#faf9f6] px-6 py-16 ${className}`}>
+    <section id="Blogs" className={`relative w-full overflow-hidden bg-[#faf9f6] px-6 py-16 ${className}`}>
       <AnimatedShapeImage
         src="/images/flower-1.png"
         width={103}

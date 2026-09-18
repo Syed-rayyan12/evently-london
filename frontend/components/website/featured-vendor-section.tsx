@@ -85,8 +85,7 @@ function VendorCard({
 
 export default function FeaturedVendorsSection() {
     return (
-        <section className="w-full 
-     px-6 py-16  relative">
+        <section className="relative w-full overflow-hidden px-6 py-16">
             <AnimatedShapeImage
                 src="/images/how-shape.png"
                 width={103}

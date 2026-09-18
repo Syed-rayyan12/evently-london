@@ -5,7 +5,7 @@ import { HowItWorks } from "./how-it-works";
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-home text-ink">
+    <div className="min-h-screen overflow-x-clip bg-home text-ink">
       <main>
         <HeroBanner />
         <CategoryCards />

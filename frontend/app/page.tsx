@@ -6,12 +6,12 @@ import { LandingPage } from "@/components/website/landing-page";
 
 export default function Home() {
   return (
-    <>
+    <div className="overflow-x-clip bg-home text-ink">
       <LandingPage />
       <FeaturedVendorsSection/>
       <TestimonialsSection />
       <BlogSection/>
       <CtaAndFooter/>
-    </>
+    </div>
   );
 }

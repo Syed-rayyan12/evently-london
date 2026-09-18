@@ -30,7 +30,7 @@ const BUDGET_ICONS = {
 
 export default function EventPlannerHero() {
   return (
-    <section className="relative w-full bg-[#F5F0EA] px-6 py-16 ">
+    <section className="relative w-full overflow-hidden bg-[#F5F0EA] px-6 py-16">
         <AnimatedShapeImage
           src="/images/flower-1.png"
           width={103}
