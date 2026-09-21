@@ -223,7 +223,7 @@ export default function AdminBlogsClient() {
           <button
             type="button"
             onClick={() => setIsAddOpen(true)}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-[#01241D] px-5 font-inter text-[14px] font-semibold text-white transition-colors hover:bg-[#C07C22]"
+            className="inline-flex min-h-11 items-center btxx justify-center gap-2 rounded-[10px] bg-[#01241D] px-5 font-inter text-[14px] font-semibold text-white transition-colors hover:bg-[#C07C22]"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             Add Blog

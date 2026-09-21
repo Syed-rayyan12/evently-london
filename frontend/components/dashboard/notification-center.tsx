@@ -137,7 +137,7 @@ export function NotificationCenter({ scope }: NotificationCenterProps) {
               {copy.description}
             </p>
           </div>
-          <div className="inline-flex w-fit items-center gap-2 rounded-[10px] bg-[#0D5B46]/10 px-4 py-3 font-inter text-sm font-semibold text-[#0D5B46]">
+          <div className="inline-flex w-fit btx-width items-center gap-2 rounded-[10px] bg-[#0D5B46]/10 px-4 py-3 font-inter text-sm font-semibold text-[#0D5B46]">
             <Bell className="h-4 w-4" aria-hidden="true" />
             {notifications.pending.length} pending
           </div>
