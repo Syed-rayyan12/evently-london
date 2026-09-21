@@ -60,7 +60,7 @@ export function AdminDashboardShell({
       <div className="min-h-screen bg-[#f3f4f6] lg:pl-[280px]">
         <header className="sticky top-0 z-50 bg-[#001B12] px-5 py-4 text-white shadow-lg shadow-black/10 lg:-ml-[280px] lg:px-8">
           <div className="flex items-center gap-4">
-            <h1 className="[font-family:var(--font-playfair)] text-[40px] font-normal uppercase leading-tight">
+            <h1 className="[font-family:var(--font-playfair)] text-[40px] main-heading font-normal uppercase leading-tight">
               Admin Dashboard
             </h1>
 
