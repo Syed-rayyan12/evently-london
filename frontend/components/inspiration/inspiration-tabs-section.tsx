@@ -157,8 +157,23 @@ export default function InspirationTabsSection() {
                 className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-white shadow-sm outline-none transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-brand-gold"
                 aria-label={`Open ${item.title}`}
               >
-               
-               
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  fill
+                  sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 90vw"
+                  className="object-cover transition duration-500 group-hover:scale-105"
+                  unoptimized
+                />
+                <span className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <span className="absolute bottom-4 left-4 right-4 text-left">
+                  <span className="block font-pt-serif text-[20px] font-normal text-white">
+                    {item.title}
+                  </span>
+                  <span className="mt-1 line-clamp-2 block font-inter text-[13px] leading-5 text-white/80">
+                    {item.text}
+                  </span>
+                </span>
               </button>
             ))}
           </div>
@@ -237,7 +252,7 @@ export default function InspirationTabsSection() {
                   {/* <p className=" font-inter text-[16px] leading-7 text-muted">
                     {activeSlide.text}
                   </p> */}
-                  <div className="flex items-center  gap-2">
+                  <div className="inspiration-modal-meta flex items-center  gap-2">
                     <div className="flex gap-2">
                       <LocateIcon />
                       <span className="font-inter text-[14.27px] font-normal text-black/70">London, UK</span>

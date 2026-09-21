@@ -7,7 +7,7 @@ import CtaAndFooter from "@/components/website/footer";
 export default function ContactPage() {
   return (
     <>
-      <main className="bg-[#F5F0EA]">
+      <main className="responsive-page overflow-x-clip bg-[#F5F0EA]">
         <ContactBanner />
         <ContactCards />
         <SendMessageForm/>

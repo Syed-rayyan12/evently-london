@@ -22,7 +22,7 @@ export function AboutBanner() {
         </h1>
         <p className="mt-5 max-w-xl font-inter text-[18px] font-normal leading-8 text-white/82">
           We built Evently London to help you plan meaningful celebrations with vendors who truly care about every detail.
-        </p>text in the her banner of about page 
+        </p>
         
       </div>
     </section>

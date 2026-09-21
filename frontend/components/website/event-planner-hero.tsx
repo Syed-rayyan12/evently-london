@@ -30,7 +30,7 @@ const BUDGET_ICONS = {
 
 export default function EventPlannerHero() {
   return (
-    <section className="relative w-full overflow-hidden bg-[#F5F0EA] px-6 py-16">
+    <section className="home-event-planner relative w-full overflow-hidden bg-[#F5F0EA] px-6 py-16">
         <AnimatedShapeImage
           src="/images/flower-1.png"
           width={103}
@@ -38,30 +38,30 @@ export default function EventPlannerHero() {
           className="absolute right-0 top-16 z-9999"
           imageClassName="h-auto w-auto object-cover"
         />
-      <div className="mx-auto grid max-w-[88%] grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1fr_1fr]">
+      <div className="home-section-inner home-event-grid mx-auto grid max-w-[88%] grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1fr_1fr]">
         {/* Left column: copy + features + CTA */}
         <div className="relative">
           {/* dotted vertical guide, decorative */}
           <span className="pointer-events-none absolute -right-5 top-0 hidden h-full  border-amber-400/70 lg:block" />
 
-          <p className="text-[20px] font-normal font-inter  text-neutral-500">
+          <p className="home-eyebrow text-[20px] font-normal font-inter  text-neutral-500">
          Every Celebration Deserves Care
           </p>
 
-          <h1 className="mt-2 text-[38px] font-serif font-normal leading-tight text-neutral-900 ">
+          <h1 className="home-event-title mt-2 text-[38px] font-serif font-normal leading-tight text-neutral-900 ">
             Design Your Perfect Celebration{" "}
             <span className="text-[#D79D42]">Event</span>
           </h1>
 
-          <p className="mt-4 max-w-md text-[18px] font-normal font-inter  text-neutral-600">
+          <p className="home-event-copy mt-4 max-w-md text-[18px] font-normal font-inter  text-neutral-600">
           We help you build a beautiful event with genuine care and beauty, adding meaning to each occasion.
           </p>
 
-          <ul className="mt-6 space-y-3">
+          <ul className="home-feature-list mt-6 space-y-3">
             {FEATURES.map((feature) => (
               <li
                 key={feature}
-                className="flex items-center gap-3 text-[15px] font-medium text-neutral-600"
+                className="home-feature-item flex items-center gap-3 text-[15px] font-medium text-neutral-600"
               >
             <span className="flex h-5 w-5 text-neutral-600 font-normal items-center justify-center rounded-full border-2 border-[#D79D42]">
                   <Check className="h-3 w-3 text-[#D79D42]" strokeWidth={3} />
@@ -73,7 +73,7 @@ export default function EventPlannerHero() {
 
           <button
             type="button"
-            className="btn-slide group mt-8 rounded-md bg-[#D79D42] px-7 py-3 text-sm font-semibold text-white shadow-sm"
+            className="home-event-cta btn-slide group mt-8 rounded-md bg-[#D79D42] px-7 py-3 text-sm font-semibold text-white shadow-sm"
           >
             <span className="btn-slide-overlay btn-slide-overlay-green" />
             <span className="btn-slide-label">Let’s Organise Your Event</span>
@@ -81,7 +81,7 @@ export default function EventPlannerHero() {
         </div>
 
         {/* Center column: couple image */}
-        <div className="relative mx-auto w-full max-w-sm">
+        <div className="home-event-image-wrap relative mx-auto w-full max-w-sm">
           <span className="pointer-events-none absolute -right-5 top-0 hidden h-full  lg:block" />
           <div className="overflow-hidden rounded-xl shadow-lg">
             <Image
@@ -89,14 +89,14 @@ export default function EventPlannerHero() {
               alt="Bride and groom embracing at their wedding"
               width={371}
               height={461}
-              className="h-[525px] w-full object-cover"
+              className="home-event-image h-[525px] w-full object-cover"
               priority
             />
           </div>
         </div>
 
         {/* Right column: event plan card */}
-        <div className="mx-auto w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="home-event-plan mx-auto w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between">
             <h2 className="text-[20px] font-pt-serif  font-normal text-neutral-900">
               Your Event Plan

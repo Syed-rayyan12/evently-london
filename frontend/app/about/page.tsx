@@ -9,7 +9,7 @@ import CtaAndFooter from "@/components/website/footer";
 export default function AboutPage() {
   return (
     <>
-      <main className="bg-[#F5F0EA]">
+      <main className="responsive-page overflow-x-clip bg-[#F5F0EA]">
         <AboutBanner />
         <OurStoryMission/>
         <Why/>

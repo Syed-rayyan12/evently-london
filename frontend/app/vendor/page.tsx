@@ -11,7 +11,7 @@ import { HowItWorks } from "@/components/website/how-it-works";
 export default function VendorPage() {
   return (
     <>
-      <main className="bg-[#F9F8F4]">
+      <main className="responsive-page overflow-x-clip bg-[#F9F8F4]">
         <VendorBanner />
         <VendorDirectory />
         <BrowseByCelebration />

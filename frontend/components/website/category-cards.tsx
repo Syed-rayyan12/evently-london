@@ -33,7 +33,7 @@ export function CategoryCards() {
   return (
     <section
       id="categories"
-      className="relative overflow-hidden bg-home px-5 py-20 lg:px-8"
+      className="home-category-section relative overflow-hidden bg-home px-5 py-20 lg:px-8"
     >
       <div
         className="absolute left-0 top-0 z-10 animate-shape-float"
@@ -47,13 +47,13 @@ export function CategoryCards() {
           className="h-auto w-auto object-cover"
         />
       </div>
-      <div className="mx-auto max-w-[90%]">
-        <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="home-section-inner mx-auto max-w-[90%]">
+        <div className="home-section-heading-row mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="mt-3 font-pt-serif text-[44px] capitalize font-normal text-ink sm:text-5xl">
+            <h2 className="home-section-title mt-3 font-pt-serif text-[44px] capitalize font-normal text-ink sm:text-5xl">
               Browse By Occasion
             </h2>
-            <p className="font-inter text-[18px] font-normal   text-black mt-4">
+            <p className="home-section-copy font-inter text-[18px] font-normal   text-black mt-4">
               Browse curated categories for every celebration.
             </p>
           </div>
@@ -72,12 +72,12 @@ export function CategoryCards() {
           </Link>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="home-category-grid grid gap-5 sm:grid-cols-2 lg:grid-cols-6">
           {categories.map((category) => (
             <Link
               key={category.name}
               href="#categories"
-              className="group block overflow-hidden capitalize rounded-[10px] border border-brand-gold/35 bg-white"
+              className="home-category-card group block overflow-hidden capitalize rounded-[10px] border border-brand-gold/35 bg-white"
             >
               <div className="relative aspect-[1] overflow-hidden">
                 <Image
@@ -88,7 +88,7 @@ export function CategoryCards() {
                   className="object-cover transition duration-500 group-hover:scale-105"
                 />
               </div>
-              <h3 className="px-4 py-4 text-center capitalize font-inter text-[18px] font-normal text-ink">
+              <h3 className="home-card-title px-4 py-4 text-center capitalize font-inter text-[18px] font-normal text-ink">
                 {category.name}
               </h3>
 

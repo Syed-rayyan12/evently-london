@@ -96,7 +96,7 @@ type MarqueeRowProps = {
 
 function TestimonialCard({ name, role, image, quote, rating }: Testimonial) {
   return (
-    <div className="relative mx-3 flex w-[340px] flex-none flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm sm:w-[440px]">
+    <div className="home-testimonial-card relative mx-3 flex w-[340px] flex-none flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm sm:w-[440px]">
       <div className="flex items-center justify-between">
         <div className="flex gap-0.5">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -161,12 +161,12 @@ function MarqueeRow({
 
 export default function TestimonialsSection() {
   return (
-    <section className="w-full bg-[#faf9f6] py-16">
+    <section className="home-testimonials w-full overflow-hidden bg-[#faf9f6] py-16">
       <div className="mx-auto max-w-3xl px-6 text-center">
-        <h2 className="text-[44px] font-pt-serif font-normal text-neutral-900">
+        <h2 className="home-section-title text-[44px] font-pt-serif font-normal text-neutral-900">
           Loved By Couples Across London
         </h2>
-        <p className="mt-3 text-[16px] font-inter font-normal leading-relaxed text-neutral-500">
+        <p className="home-section-copy mt-3 text-[16px] font-inter font-normal leading-relaxed text-neutral-500">
           When you search for luxury event décor in London, our clients share what truly made their day special.
         </p>
       </div>

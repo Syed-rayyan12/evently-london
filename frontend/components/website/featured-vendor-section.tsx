@@ -85,7 +85,7 @@ function VendorCard({
 
 export default function FeaturedVendorsSection() {
     return (
-        <section className="relative w-full overflow-hidden px-6 py-16">
+        <section className="home-featured-vendors relative w-full overflow-hidden px-6 py-16">
             <AnimatedShapeImage
                 src="/images/how-shape.png"
                 width={103}
@@ -93,9 +93,9 @@ export default function FeaturedVendorsSection() {
                 className="absolute left-0 top-0 z-10"
                 imageClassName="h-auto w-auto object-cover"
             />
-            <div className="mx-auto max-w-[90%]">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-3xl font-pt-serif font-normal text-neutral-900 sm:text-4xl">
+            <div className="home-section-inner mx-auto max-w-[90%]">
+                <div className="home-section-heading-row flex items-center justify-between">
+                    <h2 className="home-section-title text-3xl font-pt-serif font-normal text-neutral-900 sm:text-4xl">
                      Handpicked Vendors You Can Trust
                     </h2>
                     <a
@@ -109,7 +109,7 @@ export default function FeaturedVendorsSection() {
                     </a>
                 </div>
 
-                <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="home-vendor-grid mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
                     {VENDORS.map((vendor) => (
                         <VendorCard key={vendor.name} {...vendor} />
                     ))}

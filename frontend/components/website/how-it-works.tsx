@@ -25,7 +25,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="relative bg-ink px-5 pt-6 text-white lg:px-8">
+    <section className="home-how-section relative overflow-hidden bg-ink px-5 pt-6 text-white lg:px-8">
       <Image
         src="/images/how.png"
         alt=""
@@ -36,21 +36,21 @@ export function HowItWorks() {
       />
       <div className="absolute inset-0 bg-black/55" aria-hidden="true" />
 
-      <div className="relative z-10 mx-auto max-w-[95%]">
+      <div className="home-section-inner relative z-10 mx-auto max-w-[95%]">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="font-pt-serif text-[44px] font-normal leading-tight text-white sm:text-5xl">
+          <h2 className="home-section-title font-pt-serif text-[44px] font-normal leading-tight text-white sm:text-5xl">
             How It Works
           </h2>
-          <p className="mt-4 font-inter text-[18px] font-normal leading-7 text-white/82">
+          <p className="home-section-copy mt-4 font-inter text-[18px] font-normal leading-7 text-white/82">
            Finding luxury wedding vendors in London becomes truly simple when you use our trusted platform every single time.
           </p>
         </div>
 
-        <div className="mt-1 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="home-steps-grid mt-1 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {STEPS.map((step) => (
             <div
               key={step.title}
-              className="flex w-full items-center gap-5 rounded-[8px] py-10"
+              className="home-step-card flex w-full items-center gap-5 rounded-[8px] py-10"
             >
               <span className="flex h-20 w-20 shrink-0 items-center justify-center">
                 <Image

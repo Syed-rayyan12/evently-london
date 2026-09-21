@@ -97,7 +97,7 @@ export default function BlogSection({ className = "" }: BlogSectionProps) {
   }, []);
 
   return (
-    <section id="Blogs" className={`relative w-full overflow-hidden bg-[#faf9f6] px-6 py-16 ${className}`}>
+    <section id="Blogs" className={`home-blog-section relative w-full overflow-hidden bg-[#faf9f6] px-6 py-16 ${className}`}>
       <AnimatedShapeImage
         src="/images/flower-1.png"
         width={103}
@@ -116,8 +116,8 @@ export default function BlogSection({ className = "" }: BlogSectionProps) {
         />
       </div>
 
-      <div className="relative z-20 mx-auto max-w-[90%]">
-        <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="home-section-inner relative z-20 mx-auto max-w-[90%]">
+        <div className="home-blog-grid mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-6">
           {blogs.length ? blogs.map((article) => (
             <div key={article.id} className="lg:col-span-2">
               <BlogCard {...article} />

@@ -50,7 +50,7 @@ const sections = [
 export default function PrivacyPolicyPage() {
   return (
     <>
-      <main className="bg-[#F9F8F4]">
+      <main className="responsive-page overflow-x-clip bg-[#F9F8F4]">
         <section className="relative min-h-[520px] overflow-hidden text-white">
           <WebsiteHeader overlay />
           <Image
