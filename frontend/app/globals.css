@@ -402,6 +402,7 @@ body {
    display: flex;
    flex-direction: column;
    gap:4px;
+   align-items: start;
 }
 }
 @media (max-width: 1279px) and (min-width: 1200px) {
