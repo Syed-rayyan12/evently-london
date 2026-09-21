@@ -378,7 +378,7 @@ body {
  }
 
  .tabs{
-   max-width: 400px;
+   max-width: 273px;
    width:100%;
  }
 }
@@ -390,6 +390,11 @@ body {
  }
      .container-sub{
    max-width: 1200px;
+   width:100%;
+ }
+
+  .tabs{
+   max-width: 395px;
    width:100%;
  }
 }
