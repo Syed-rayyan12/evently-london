@@ -5,27 +5,27 @@ import Link from "next/link";
 const categories = [
   {
     name: "Weddings",
-    image: "/images/Photography.png",
+    image: "/images/wedding.png",
   },
   {
     name: "Engagements",
-    image: "/images/Catering.png",
+    image: "/images/engagement.png",
   },
   {
     name: "Mehndi / Sangeet",
-    image: "/images/venue.png",
+    image: "/images/mehndi.png",
   },
   {
     name: "Birthdays",
-    image: "/images/decor-1.png",
+    image: "/images/birthday.png",
   },
   {
     name: "Baby Showers",
-    image: "/images/Entertainment.png",
+    image: "/images/baby-shower.png",
   },
   {
     name: "Religious Events",
-    image: "/images/Makeup Artists.png",
+    image: "/images/venue.png",
   },
 ];
 

@@ -183,7 +183,7 @@ export default function AdminDashboardPage() {
                 Live customer enquiry volume by selected period.
               </p>
             </div>
-            <div className="flex rounded-[10px] border border-[#dfe7e2] bg-[#f5f7f4] p-1">
+            <div className="flex rounded-[10px] tabs border border-[#dfe7e2] bg-[#f5f7f4] p-1">
               {periodTabs.map((tab) => (
                 <button
                   key={tab.value}
