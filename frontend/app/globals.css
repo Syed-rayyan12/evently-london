@@ -394,11 +394,16 @@ body {
  }
 
   .tabs{
-   max-width: 395px;
+   max-width: 275px;
    width:100%;
  }
-}
 
+ .broken{
+   display: flex;
+   flex-direction: column;
+   gap:4px;
+}
+}
 @media (max-width: 1279px) and (min-width: 1200px) {
 
     .container-header{

@@ -174,7 +174,7 @@ export default function AdminDashboardPage() {
 
       <section id="analytics" className="grid gap-7 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="rounded-[14px] bg-white p-5 shadow-xl shadow-[#0D5B46]/10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row broken sm:items-center sm:justify-between">
             <div>
               <h3 className="font-inter text-[22px] font-semibold text-black">
                 Enquiry Overview
