@@ -15,16 +15,16 @@ type HeaderRangeMenuProps = {
 
 export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps) {
   const [open, setOpen] = useState(false);
-  const [closing, setClosing] = useState(false)
+  const [closing, setClosing] = useState(false);
 
-   const closeMenu = () => {
-      setClosing(true);
+  const closeMenu = () => {
+    setClosing(true);
 
-      setTimeout(() => {
-        setOpen(false);
-        setClosing(false);
-      }, 220);
-    };
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 220);
+  };
 
   useEffect(() => {
     if (!open) {
@@ -36,8 +36,6 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
         setOpen(false);
       }
     }
-
-   
 
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
@@ -78,10 +76,10 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
           <aside
             className="mr-auto flex h-full w-full max-w-sm flex-col bg-[#001B12] px-7 py-6 text-white shadow-2xl"
             style={{
-      animation: closing
-        ? "menuSlideToLeft 220ms ease-in forwards"
-        : "menuSlideFromLeft 240ms ease-out forwards",
-    }}
+              animation: closing
+                ? "menuSlideToLeft 220ms ease-in forwards"
+                : "menuSlideFromLeft 240ms ease-out forwards",
+            }}
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
@@ -91,8 +89,7 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
               <button
                 type="button"
                 aria-label="Close navigation menu"
-                className="grid h-10 w-10 place-items-center rounded-md border border-white/25 text-white transition hover:border-
-    brand-gold hover:text-gold"
+                className="grid h-10 w-10 place-items-center rounded-md border border-white/25 text-white transition hover:border-brand-gold hover:text-gold"
                 onClick={closeMenu}
               >
                 <X className="h-5 w-5" aria-hidden="true" />
