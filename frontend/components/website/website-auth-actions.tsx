@@ -105,7 +105,7 @@ export function WebsiteAuthActions({
 
   if (activeSession) {
     return (
-      <div className="flex items-center gap-2 justify-self-end">
+      <div className="flex items-center gap-2 justify-self-end w-[74%]">
         <Link
           href={activeSession.href}
           className={loginClassName}

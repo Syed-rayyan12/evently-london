@@ -41,7 +41,7 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
     : "desktop-range-menu-button text-ink hover:border-brand-gold hover:text-gold";
 
   return (
-    <div className="desktop-range-menu justify-self-end">
+    <div className="desktop-range-menu justify-self-end ">
       <button
         type="button"
         aria-label="Open navigation menu"
@@ -93,10 +93,10 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
               ))}
             </nav>
 
-            <div className="mt-auto border-t border-white/15 pt-6">
+            <div className="mt-auto border-t border-white/15 pt-6 ">
               <WebsiteAuthActions
                 loginClassName="btn-slide group h-11 w-full rounded-[10px] border border-brand-gold px-8 font-inter text-[16px] font-normal text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-gold"
-                signupClassName="btn-slide group mt-3 h-11 w-full rounded-[10px] bg-gold px-8 font-inter text-[16px] font-normal text-white"
+                signupClassName="btn-slide group  h-11 w-full rounded-[10px] bg-gold px-8 font-inter text-[16px] font-normal text-white"
               />
             </div>
           </aside>
