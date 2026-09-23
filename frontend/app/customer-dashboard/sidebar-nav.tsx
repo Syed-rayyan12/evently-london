@@ -12,7 +12,7 @@ import {
   Ticket,
 } from "lucide-react";
 
-const sidebarLinks = [
+export const customerSidebarLinks = [
   { label: "Dashboard", href: "/customer-dashboard", icon: LayoutDashboard },
   { label: "Notifications", href: "/customer-dashboard/notifications", icon: Bell },
   { label: "My Events", href: "/customer-dashboard/events", icon: Ticket },
@@ -31,7 +31,7 @@ export function AdminSidebarNav() {
 
   return (
     <nav className="space-y-2" aria-label="Customer dashboard navigation">
-      {sidebarLinks.map((item) => {
+      {customerSidebarLinks.map((item) => {
         const Icon = item.icon;
         const isActive =
           item.href === "/customer-dashboard"

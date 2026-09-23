@@ -4,13 +4,14 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { MobileDashboardNav } from "@/components/dashboard/mobile-dashboard-nav";
 import { getVendorProfile } from "@/lib/auth";
 import {
   clearVendorProfileSession,
   getVendorProfileSession,
   saveVendorProfileSession,
 } from "@/lib/vendor-session";
-import { SidebarNav } from "./sidebar-nav";
+import { SidebarNav, vendorSidebarLinks } from "./sidebar-nav";
 import { HeaderActions } from "./header-actions";
 
 export function VendorDashboardShell({
@@ -92,10 +93,10 @@ export function VendorDashboardShell({
       </aside>
 
       <div className="min-h-screen bg-[#f3f4f6] lg:pl-[280px]">
-        <header className="sticky top-0 z-50 bg-[#001B12] px-5 py-4 text-white shadow-lg shadow-black/10 lg:-ml-[280px] lg:px-8">
+        <header className="sticky top-0 z-50 bg-[#001B12] px-4 py-3 text-white shadow-lg shadow-black/10 sm:px-5 sm:py-4 lg:-ml-[280px] lg:px-8">
           <div className="flex items-center gap-4">
-            <div className="min-w-0 flex-none">
-              <h1 className="whitespace-nowrap [font-family:var(--font-playfair)] text-[34px] font-normal uppercase leading-tight">
+            <div className="min-w-0 flex-1 md:flex-none">
+              <h1 className="truncate [font-family:var(--font-playfair)] text-[23px] font-normal uppercase leading-tight sm:text-[30px] lg:text-[34px]">
                 Vendor Dashboard
               </h1>
             </div>
@@ -113,9 +114,14 @@ export function VendorDashboardShell({
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-5 py-7 lg:px-8 lg:py-8">
+        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-4 pb-28 pt-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
           {children}
         </main>
+        <MobileDashboardNav
+          links={vendorSidebarLinks}
+          baseHref="/vendor-dashboard"
+          label="Vendor mobile navigation"
+        />
       </div>
     </section>
   );

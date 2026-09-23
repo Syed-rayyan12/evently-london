@@ -3,9 +3,10 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { MobileDashboardNav } from "@/components/dashboard/mobile-dashboard-nav";
 import { getCustomerProfileSession } from "@/lib/customer-session";
 import { AdminHeaderActions } from "./header-actions";
-import { AdminSidebarNav } from "./sidebar-nav";
+import { AdminSidebarNav, customerSidebarLinks } from "./sidebar-nav";
 
 export function CustomerDashboardShell({
   children,
@@ -23,7 +24,7 @@ export function CustomerDashboardShell({
       return;
     }
 
-    setAuthorized(true);
+    void Promise.resolve().then(() => setAuthorized(true));
   }, [router]);
 
   if (!authorized) {
@@ -41,9 +42,9 @@ export function CustomerDashboardShell({
       </aside>
 
       <div className="min-h-screen bg-[#f3f4f6] lg:pl-[280px]">
-        <header className="sticky top-0 z-50 bg-[#001B12] px-5 py-4 text-white shadow-lg shadow-black/10 lg:-ml-[280px] lg:px-8">
+        <header className="sticky top-0 z-50 bg-[#001B12] px-4 py-3 text-white shadow-lg shadow-black/10 sm:px-5 sm:py-4 lg:-ml-[280px] lg:px-8">
           <div className="flex items-center gap-4">
-            <h1 className="whitespace-nowrap [font-family:var(--font-playfair)] text-[35px] font-normal uppercase leading-tight">
+            <h1 className="min-w-0 flex-1 truncate [font-family:var(--font-playfair)] text-[22px] font-normal uppercase leading-tight sm:text-[29px] lg:text-[35px]">
               Customer Dashboard
             </h1>
 
@@ -60,9 +61,14 @@ export function CustomerDashboardShell({
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-5 py-7 lg:px-8 lg:py-8">
+        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-4 pb-28 pt-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
           {children}
         </main>
+        <MobileDashboardNav
+          links={customerSidebarLinks}
+          baseHref="/customer-dashboard"
+          label="Customer mobile navigation"
+        />
       </div>
     </section>
   );

@@ -15,7 +15,7 @@ import {
   UserRound,
 } from "lucide-react";
 
-const sidebarLinks = [
+export const vendorSidebarLinks = [
   { label: "Dashboard", href: "/vendor-dashboard", icon: LayoutDashboard },
   { label: "Notifications", href: "/vendor-dashboard/notifications", icon: Bell },
   {
@@ -38,7 +38,7 @@ export function SidebarNav() {
 
   return (
     <nav className="space-y-2" aria-label="Vendor dashboard navigation">
-      {sidebarLinks.map((item) => {
+      {vendorSidebarLinks.map((item) => {
         const Icon = item.icon;
         const isActive =
           item.href === "/vendor-dashboard"

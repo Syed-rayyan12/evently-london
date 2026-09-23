@@ -193,13 +193,13 @@ export default function InspirationTabsSection() {
 
       {activeSlide && activeIndex !== null && (
         <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 px-3 py-4 backdrop-blur-sm sm:px-4 sm:py-6"
           role="dialog"
           aria-modal="true"
           onClick={() => setActiveIndex(null)}
         >
           <div
-            className="relative w-full max-w-2xl animate-[inspirationModal_220ms_ease-out] overflow-hidden rounded-lg bg-white shadow-2xl"
+            className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl animate-[inspirationModal_220ms_ease-out] flex-col overflow-hidden rounded-lg bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)]"
             onClick={(event) => event.stopPropagation()}
           >
             <button
@@ -211,14 +211,14 @@ export default function InspirationTabsSection() {
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
 
-            <div className="grid max-h-[78vh] overflow-y-auto lg:grid-cols-1">
-              <div className="relative bg-black sm:min-h-[320px]">
+            <div className="grid min-h-0 flex-1 overflow-y-auto lg:grid-cols-1">
+              <div className="relative aspect-[4/3] min-h-[220px] bg-black sm:min-h-[320px]">
                 <Image
                   key={activeSlide.src}
                   src={activeSlide.src}
                   alt={activeSlide.alt}
                   fill
-                  sizes="(min-width: 1024px) 720px, 100vw"
+                  sizes="(min-width: 1024px) 720px, 94vw"
                   className="animate-[inspirationImage_260ms_ease-out] object-cover"
                   unoptimized
                 />
@@ -226,7 +226,7 @@ export default function InspirationTabsSection() {
                 <button
                   type="button"
                   onClick={showPrevious}
-                  className="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-lg transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold"
+                  className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-lg transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold sm:left-4 sm:h-11 sm:w-11"
                   aria-label="Previous image"
                 >
                   <ChevronLeft className="h-6 w-6" aria-hidden="true" />
@@ -234,16 +234,16 @@ export default function InspirationTabsSection() {
                 <button
                   type="button"
                   onClick={showNext}
-                  className="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-lg transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold"
+                  className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-ink shadow-lg transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold sm:right-4 sm:h-11 sm:w-11"
                   aria-label="Next image"
                 >
                   <ChevronRight className="h-6 w-6" aria-hidden="true" />
                 </button>
               </div>
 
-              <div className="flex min-h-[60px]  justify-between items-center bg-white p-6">
+              <div className="flex min-h-[60px] flex-col gap-4 bg-white p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
                 <div className="flex flex-col gap-2">
-                  <h3 className=" font-pt-serif text-[24px] font-normal leading-tight text-black">
+                  <h3 className="font-pt-serif text-[22px] font-normal leading-tight text-black sm:text-[24px]">
                     {activeSlide.title}
                   </h3>
                   <p className="font-inter text-[14px] font-medium uppercase text-gold">
@@ -252,22 +252,22 @@ export default function InspirationTabsSection() {
                   {/* <p className=" font-inter text-[16px] leading-7 text-muted">
                     {activeSlide.text}
                   </p> */}
-                  <div className="inspiration-modal-meta flex items-center  gap-2">
-                    <div className="flex gap-2">
-                      <LocateIcon />
+                  <div className="inspiration-modal-meta flex flex-wrap items-center gap-3">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <LocateIcon className="h-4 w-4 flex-none" aria-hidden="true" />
                       <span className="font-inter text-[14.27px] font-normal text-black/70">London, UK</span>
                     </div>
-                    <div className="flex gap-2">
-                      <LocateIcon />
+                    <div className="flex min-w-0 items-center gap-2">
+                      <LocateIcon className="h-4 w-4 flex-none" aria-hidden="true" />
                       <span className="font-inter text-[14.27px] font-normal text-black/70">24 Aug 2026</span>
                     </div>
-                    <div className="flex gap-2">
-                      <LocateIcon />
+                    <div className="flex min-w-0 items-center gap-2">
+                      <LocateIcon className="h-4 w-4 flex-none" aria-hidden="true" />
                       <span className="font-inter text-[14.27px] font-normal text-black/70">2 Hours ago</span>
                     </div>
                   </div>
                 </div>
-                <div className="text-[18px] text-[#2A5344] font-pt-serif font-normal text-[20px]">
+                <div className="shrink-0 self-start font-pt-serif text-[20px] font-normal text-[#2A5344] sm:self-auto">
                   {activeIndex + 1} <span className="text-[#D79D42]">/</span>{SLIDES.length}
                 </div>
 

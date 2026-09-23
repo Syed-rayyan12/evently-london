@@ -16,7 +16,7 @@ import {
   Users,
 } from "lucide-react";
 
-const sidebarLinks = [
+export const adminSidebarLinks = [
   { label: "Dashboard", href: "/admin-dashboard", icon: LayoutDashboard },
   { label: "Notifications", href: "/admin-dashboard/notifications", icon: Bell },
   { label: "Approvals", href: "/admin-dashboard/approvals", icon: UserCheck },
@@ -39,7 +39,7 @@ export function AdminSidebarNav() {
 
   return (
     <nav className="space-y-2" aria-label="Admin dashboard navigation">
-      {sidebarLinks.map((item) => {
+      {adminSidebarLinks.map((item) => {
         const Icon = item.icon;
         const isActive =
           item.href === "/admin-dashboard"

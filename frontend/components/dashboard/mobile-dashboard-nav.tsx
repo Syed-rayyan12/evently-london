@@ -1,0 +1,55 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+
+type MobileDashboardNavProps = {
+  links: Array<{
+    label: string;
+    href: string;
+    icon: LucideIcon;
+  }>;
+  baseHref: string;
+  label: string;
+};
+
+export function MobileDashboardNav({
+  links,
+  baseHref,
+  label,
+}: MobileDashboardNavProps) {
+  const pathname = usePathname();
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#001B12] px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 text-white shadow-[0_-12px_30px_rgba(0,0,0,0.2)] lg:hidden"
+      aria-label={label}
+    >
+      <div className="flex gap-1 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {links.map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            item.href === baseHref
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`flex min-w-[76px] flex-1 flex-col items-center justify-center gap-1 rounded-[10px] px-2 py-2 text-center font-inter text-[11px] font-semibold transition-colors ${
+                isActive
+                  ? "bg-white text-[#0D5B46]"
+                  : "text-white/75 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <Icon className="h-5 w-5" aria-hidden="true" />
+              <span className="max-w-full truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}

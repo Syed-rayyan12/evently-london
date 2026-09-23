@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
+import { MobileDashboardNav } from "@/components/dashboard/mobile-dashboard-nav";
 import { getAdminSession } from "@/lib/admin-session";
 import { AdminHeaderActions } from "./header-actions";
-import { AdminSidebarNav } from "./sidebar-nav";
+import { AdminSidebarNav, adminSidebarLinks } from "./sidebar-nav";
 
 export function AdminDashboardShell({
   children,
@@ -19,7 +20,7 @@ export function AdminDashboardShell({
 
   useEffect(() => {
     if (isLoginPage) {
-      setAuthorized(true);
+      void Promise.resolve().then(() => setAuthorized(true));
       return;
     }
 
@@ -30,7 +31,7 @@ export function AdminDashboardShell({
       return;
     }
 
-    setAuthorized(true);
+    void Promise.resolve().then(() => setAuthorized(true));
   }, [isLoginPage, router]);
 
   if (isLoginPage) {
@@ -58,9 +59,9 @@ export function AdminDashboardShell({
       </aside>
 
       <div className="min-h-screen bg-[#f3f4f6] lg:pl-[280px]">
-        <header className="sticky top-0 z-50 bg-[#001B12] px-5 py-4 text-white shadow-lg shadow-black/10 lg:-ml-[280px] lg:px-8">
+        <header className="sticky top-0 z-50 bg-[#001B12] px-4 py-3 text-white shadow-lg shadow-black/10 sm:px-5 sm:py-4 lg:-ml-[280px] lg:px-8">
           <div className="flex items-center gap-4">
-            <h1 className="[font-family:var(--font-playfair)] text-[40px] main-heading font-normal uppercase leading-tight">
+            <h1 className="[font-family:var(--font-playfair)] text-[24px] font-normal uppercase leading-tight sm:text-[30px] lg:text-[40px]">
               Admin Dashboard
             </h1>
 
@@ -77,9 +78,14 @@ export function AdminDashboardShell({
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-5 py-7 lg:px-8 lg:py-8">
+        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-4 pb-28 pt-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
           {children}
         </main>
+        <MobileDashboardNav
+          links={adminSidebarLinks}
+          baseHref="/admin-dashboard"
+          label="Admin mobile navigation"
+        />
       </div>
     </section>
   );
