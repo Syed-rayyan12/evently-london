@@ -61,7 +61,7 @@ export function HowItWorks() {
                   className="h-20 w-20 object-cover shrink-0"
                 />
               </span>
-              <div className="flex min-w-0 flex-col">
+              <div className="flex min-w-0 content-tx flex-col">
                 <h3 className=" font-pt-serif text-[16px] font-normal text-white">
                   {step.title}
                 </h3>

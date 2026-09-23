@@ -41,7 +41,7 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
     : "desktop-range-menu-button text-ink hover:border-brand-gold hover:text-gold";
 
   return (
-    <div className="desktop-range-menu justify-self-end w-60">
+    <div className="desktop-range-menu justify-self-end">
       <button
         type="button"
         aria-label="Open navigation menu"
