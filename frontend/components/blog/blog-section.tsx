@@ -32,7 +32,7 @@ function BlogCard({ bannerImage, createdAt, sections, slug, title }: BlogPost) {
         {title}
       </h3>
 
-      <p className="mt-2 flex-1 font-inter text-[14px] font-normal leading-relaxed text-neutral-500">
+      <p className="mt-2 line-clamp flex-1 font-inter text-[14px] font-normal leading-relaxed text-neutral-500">
         {firstSection?.paragraph ?? ""}
       </p>
 

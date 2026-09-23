@@ -55,7 +55,7 @@ function VendorCard({
 }: (typeof VENDORS)[number]) {
     return (
         <div className="flex-1 overflow-hidden rounded-xl border border-neutral-200 p-1 bg-white shadow-sm">
-            <div className="relative h-40 w-full">
+            <div className="relative mobile-height h-40 w-full">
                 <Image src={image} alt={name} fill className="object-cover rounded-lg" />
                 <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-[#173d33] px-2.5 py-1 text-[11px] font-medium text-white">
                     <BadgeCheck className="h-3.5 w-3.5" />

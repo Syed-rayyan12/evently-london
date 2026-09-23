@@ -106,7 +106,7 @@ export default function EventPlannerHero() {
             </span>
           </div>
 
-          <p className="mt-1 text-[20px] text-end font-pt-serif font-normal text-neutral-900">
+          <p className="mt-1 text-[20px] text-start font-pt-serif font-normal text-neutral-900">
             £18,000 - £23,000
           </p>
 

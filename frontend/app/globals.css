@@ -408,7 +408,7 @@ body {
  .broken{
    display: flex;
    flex-direction: column;
-   gap:4px;
+   gap:12px;
    align-items: start;
 }
 }
@@ -446,7 +446,7 @@ body {
    width: 145px;
   }
   .main-heading{
-    font-size: 28px;
+    font-size: 25px;
   }
   .btx-width{
     width: 140px;
@@ -552,6 +552,10 @@ body {
 }
 
 @media (max-width: 1023px) {
+
+  .main-heading{
+    font-size: 25px;
+  }
   
  .hero-banner-section {
    min-height: auto;
@@ -895,9 +899,23 @@ body {
  }
 
  .home-step-card {
-   align-items: flex-start;
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
    gap: 14px;
  }
+
+ .mobile-height{
+  height:60vh;
+ }
+  
+  .line-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* number of lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
  .home-footer-cta {
    padding-left: 14px;
