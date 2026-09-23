@@ -15,6 +15,16 @@ type HeaderRangeMenuProps = {
 
 export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps) {
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false)
+
+   const closeMenu = () => {
+      setClosing(true);
+
+      setTimeout(() => {
+        setOpen(false);
+        setClosing(false);
+      }, 220);
+    };
 
   useEffect(() => {
     if (!open) {
@@ -26,6 +36,8 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
         setOpen(false);
       }
     }
+
+   
 
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
@@ -41,7 +53,7 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
     : "desktop-range-menu-button text-ink hover:border-brand-gold hover:text-gold";
 
   return (
-    <div className="desktop-range-menu justify-self-end ">
+    <div className="desktop-range-menu justify-self-end">
       <button
         type="button"
         aria-label="Open navigation menu"
@@ -55,6 +67,7 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
       {open ? (
         <div
           className="fixed inset-0 z-[70] bg-black/45 backdrop-blur-sm"
+          style={{ animation: "menuFadeIn 180ms ease-out forwards" }}
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
@@ -63,7 +76,12 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
           }}
         >
           <aside
-            className="ml-auto flex h-full w-full max-w-sm flex-col bg-[#001B12] px-7 py-6 text-white shadow-2xl"
+            className="mr-auto flex h-full w-full max-w-sm flex-col bg-[#001B12] px-7 py-6 text-white shadow-2xl"
+            style={{
+      animation: closing
+        ? "menuSlideToLeft 220ms ease-in forwards"
+        : "menuSlideFromLeft 240ms ease-out forwards",
+    }}
             role="dialog"
             aria-modal="true"
             aria-label="Navigation menu"
@@ -73,8 +91,9 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
               <button
                 type="button"
                 aria-label="Close navigation menu"
-                className="grid h-10 w-10 place-items-center rounded-md border border-white/25 text-white transition hover:border-brand-gold hover:text-gold"
-                onClick={() => setOpen(false)}
+                className="grid h-10 w-10 place-items-center rounded-md border border-white/25 text-white transition hover:border-
+    brand-gold hover:text-gold"
+                onClick={closeMenu}
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -100,6 +119,28 @@ export function HeaderRangeMenu({ links, overlay = false }: HeaderRangeMenuProps
               />
             </div>
           </aside>
+           <style jsx global>{`
+    @keyframes menuSlideFromLeft {
+      from {
+        transform: translateX(-100%);
+      }
+
+      to {
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes menuSlideToLeft {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-100%);
+      }
+    }
+  `}</style>
+
         </div>
       ) : null}
     </div>
