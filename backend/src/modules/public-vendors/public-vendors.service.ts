@@ -78,12 +78,33 @@ export const publicVendorSelect = {
   }
 } as const;
 
+type PublicVendorUser = Parameters<typeof mapUserToPublicVendor>[0];
+
+const searchKeywordGroups = [
+  ["decor", "decoration", "styling", "floral", "flowers", "mandap", "stage", "backdrop", "tablescape", "centrepiece", "centerpiece", "theme setup"],
+  ["photography", "photo", "photographer", "photoshoot", "portraits", "pre wedding", "candid", "album", "camera"],
+  ["video", "videography", "cinematography", "film", "reels", "highlight", "drone", "trailer"],
+  ["catering", "food", "caterer", "buffet", "menu", "dinner", "lunch", "halal", "dessert", "live cooking"],
+  ["cake", "bakery", "birthday cake", "wedding cake", "cupcakes", "sweets", "dessert table"],
+  ["venue", "banquet", "hall", "hotel", "marquee", "outdoor", "reception", "event space"],
+  ["planner", "planning", "organiser", "organizer", "coordinator", "event management", "wedding planner"],
+  ["music", "dj", "singer", "band", "dhol", "sound", "live music", "entertainment"],
+  ["lighting", "lights", "uplighting", "ambience", "dance floor", "sound and light"],
+  ["makeup", "mua", "beauty", "hair", "hair stylist", "bridal makeup", "party makeup", "glam"],
+  ["mehndi", "henna", "mehndi artist", "bridal mehndi", "henna night"],
+  ["clothing", "bridal wear", "lehenga", "sherwani", "suits", "boutique", "dress", "tailoring"],
+  ["transport", "car", "wedding car", "luxury car", "limousine", "chauffeur", "car hire"],
+  ["invitation", "invites", "cards", "stationery", "digital invite", "welcome board", "signage"],
+  ["entertainment", "performers", "dancers", "host", "mc", "kids entertainment", "photo booth"]
+];
+
 export async function listPublicVendors(query: PublicVendorsQuery): Promise<PublicVendorsResponse> {
   const page = query.page;
   const limit = query.limit;
   const skip = (page - 1) * limit;
   const selectedCategories = parseCsv(query.category);
   const normalizedQuery = normalize(query.query);
+  const searchTerms = getSearchTerms(normalizedQuery);
   const normalizedLocation = normalize(query.location);
 
   const users = await prisma.user.findMany({
@@ -102,28 +123,40 @@ export async function listPublicVendors(query: PublicVendorsQuery): Promise<Publ
 
   const allVendors = users
     .filter((user) => user.vendorProfile)
-    .map(mapUserToPublicVendor);
+    .map((user) => ({
+      user,
+      vendor: mapUserToPublicVendor(user)
+    }));
 
-  const categories = Array.from(new Set(allVendors.map((vendor) => vendor.category).filter(Boolean))).sort();
-  const priceValues = allVendors.map((vendor) => vendor.priceFrom).filter((price) => price > 0);
+  const categories = Array.from(new Set(allVendors.map(({ vendor }) => vendor.category).filter(Boolean))).sort();
+  const priceValues = allVendors.map(({ vendor }) => vendor.priceFrom).filter((price) => price > 0);
   const priceMin = priceValues.length ? Math.min(...priceValues) : 0;
   const priceMax = priceValues.length ? Math.max(...priceValues) : 5000;
 
-  const filteredVendors = allVendors.filter((vendor) => {
-    const matchesQuery =
-      !normalizedQuery ||
-      normalize(vendor.name).includes(normalizedQuery) ||
-      normalize(vendor.category).includes(normalizedQuery) ||
-      normalize(vendor.about).includes(normalizedQuery);
-    const matchesLocation =
-      !normalizedLocation || normalize(vendor.location).includes(normalizedLocation);
-    const matchesCategory =
-      !selectedCategories.length || selectedCategories.includes(vendor.category);
-    const matchesMinPrice = query.minPrice === undefined || vendor.priceFrom >= query.minPrice;
-    const matchesMaxPrice = query.maxPrice === undefined || vendor.priceFrom <= query.maxPrice;
+  const filteredVendors = allVendors
+    .map(({ user, vendor }) => ({
+      vendor,
+      score: normalizedQuery ? scoreVendorSearch(user, vendor, normalizedQuery, searchTerms) : 0
+    }))
+    .filter(({ vendor, score }) => {
+      const matchesQuery = !normalizedQuery || score > 0;
+      const matchesLocation =
+        !normalizedLocation || normalize(vendor.location).includes(normalizedLocation);
+      const matchesCategory =
+        !selectedCategories.length || selectedCategories.includes(vendor.category);
+      const matchesMinPrice = query.minPrice === undefined || vendor.priceFrom >= query.minPrice;
+      const matchesMaxPrice = query.maxPrice === undefined || vendor.priceFrom <= query.maxPrice;
 
-    return matchesQuery && matchesLocation && matchesCategory && matchesMinPrice && matchesMaxPrice;
-  });
+      return matchesQuery && matchesLocation && matchesCategory && matchesMinPrice && matchesMaxPrice;
+    })
+    .sort((first, second) => {
+      if (normalizedQuery && second.score !== first.score) {
+        return second.score - first.score;
+      }
+
+      return first.vendor.name.localeCompare(second.vendor.name);
+    })
+    .map(({ vendor }) => vendor);
 
   const total = filteredVendors.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
@@ -331,8 +364,99 @@ function parseCsv(value: string | undefined) {
     : [];
 }
 
+function getSearchTerms(normalizedQuery: string) {
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const terms = new Set(
+    [normalizedQuery, ...normalizedQuery.split(" ")]
+      .map((term) => term.trim())
+      .filter((term) => term.length > 1)
+  );
+
+  if (normalizedQuery.length < 3) {
+    return Array.from(terms);
+  }
+
+  searchKeywordGroups.forEach((group) => {
+    const normalizedGroup = group.map(normalize);
+    const matchesGroup = normalizedGroup.some((keyword) =>
+      keyword.includes(normalizedQuery) ||
+      normalizedQuery.includes(keyword) ||
+      normalizedQuery.split(" ").some((word) => word.length > 1 && keyword.includes(word))
+    );
+
+    if (matchesGroup) {
+      normalizedGroup.forEach((keyword) => terms.add(keyword));
+    }
+  });
+
+  return Array.from(terms);
+}
+
+function scoreVendorSearch(
+  user: PublicVendorUser,
+  vendor: PublicVendor,
+  normalizedQuery: string,
+  searchTerms: string[]
+) {
+  const fields = [
+    { value: vendor.name, weight: 90 },
+    { value: vendor.category, weight: 70 },
+    { value: vendor.tagline, weight: 35 },
+    { value: vendor.about, weight: 30 },
+    { value: vendor.location, weight: 15 },
+    ...user.vendorServices.flatMap((service) => [
+      { value: service.name, weight: 65 },
+      { value: service.description ?? "", weight: 35 },
+      ...service.packages.flatMap((packageItem) => [
+        { value: packageItem.name, weight: 45 },
+        { value: packageItem.description ?? "", weight: 25 }
+      ])
+    ]),
+    ...user.vendorPackages.flatMap((packageItem) => [
+      { value: packageItem.name, weight: 45 },
+      { value: packageItem.description ?? "", weight: 25 }
+    ])
+  ];
+
+  return fields.reduce((score, field) => score + scoreSearchField(field.value, field.weight, normalizedQuery, searchTerms), 0);
+}
+
+function scoreSearchField(
+  value: string | undefined,
+  weight: number,
+  normalizedQuery: string,
+  searchTerms: string[]
+) {
+  const normalizedValue = normalize(value);
+
+  if (!normalizedValue) {
+    return 0;
+  }
+
+  let score = normalizedValue.includes(normalizedQuery) ? weight * 2 : 0;
+
+  searchTerms.forEach((term) => {
+    if (term !== normalizedQuery && normalizedValue.includes(term)) {
+      score += weight;
+    }
+  });
+
+  return score;
+}
+
 function normalize(value: string | undefined) {
-  return value?.trim().toLowerCase() ?? "";
+  return (
+    value
+      ?.trim()
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim() ?? ""
+  );
 }
 
 function createVendorSlug(name: string, id: string) {

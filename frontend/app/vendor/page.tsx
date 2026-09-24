@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Trust from "@/components/shared/trust";
 import {
   BrowseByCelebration,
@@ -13,7 +14,9 @@ export default function VendorPage() {
     <>
       <main className="responsive-page overflow-x-clip bg-[#F9F8F4]">
         <VendorBanner />
-        <VendorDirectory />
+        <Suspense fallback={null}>
+          <VendorDirectory />
+        </Suspense>
         <BrowseByCelebration />
         <VendorGetInspired />
         <HowItWorks/>

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { MapPin, Search } from "lucide-react";
 
 export type VendorSearchValues = {
@@ -9,16 +9,50 @@ export type VendorSearchValues = {
 };
 
 type SearchBarProps = {
+  initialValues?: VendorSearchValues;
   onSearch?: (values: VendorSearchValues) => void;
 };
 
-export default function SearchBar({ onSearch }: SearchBarProps) {
-  const [query, setQuery] = useState("");
-  const [location, setLocation] = useState("");
+export default function SearchBar({ initialValues, onSearch }: SearchBarProps) {
+  const [query, setQuery] = useState(initialValues?.query ?? "");
+  const [location, setLocation] = useState(initialValues?.location ?? "");
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didMount = useRef(false);
+  const onSearchRef = useRef(onSearch);
+
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      onSearchRef.current?.({ query, location });
+    }, 350);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [location, query]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSearch?.({ query, location });
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    onSearchRef.current?.({ query, location });
   };
 
   return (

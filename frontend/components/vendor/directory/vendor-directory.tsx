@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Pagination from "@/components/shared/pagination";
 import { listPublicVendors, type PublicVendor } from "@/lib/public-vendors";
 import Filters from "./filters";
@@ -23,14 +24,22 @@ const PAGE_SIZE = 20;
 const DEFAULT_PRICE_MAX = 5000;
 
 export default function VendorDirectory() {
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("query") ?? "";
+  const initialLocation = searchParams.get("location") ?? "";
+  const initialMinPrice = getNumberParam(searchParams.get("minPrice"), 0);
+  const initialMaxPrice = getNumberParam(searchParams.get("maxPrice"), DEFAULT_PRICE_MAX);
   const [vendors, setVendors] = useState<PublicVendor[]>([]);
   const [availableCategories, setAvailableCategories] = useState(FILTER_CATEGORIES);
   const [searchTerm, setSearchTerm] = useState<VendorSearchValues>({
-    query: "",
-    location: "",
+    query: initialQuery,
+    location: initialLocation,
   });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState({ minPrice: 0, maxPrice: DEFAULT_PRICE_MAX });
+  const [priceRange, setPriceRange] = useState({
+    minPrice: initialMinPrice,
+    maxPrice: Math.max(initialMinPrice, initialMaxPrice)
+  });
   const [availablePriceRange, setAvailablePriceRange] = useState({
     minPrice: 0,
     maxPrice: DEFAULT_PRICE_MAX
@@ -38,7 +47,7 @@ export default function VendorDirectory() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalVendors, setTotalVendors] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isGridLoading, setIsGridLoading] = useState(false);
+  const [isGridLoading, setIsGridLoading] = useState(true);
   const [message, setMessage] = useState("");
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,7 +75,6 @@ export default function VendorDirectory() {
   useEffect(() => {
     let active = true;
 
-    setIsGridLoading(true);
     listPublicVendors({
       page: currentPage,
       limit: PAGE_SIZE,
@@ -125,11 +133,13 @@ export default function VendorDirectory() {
   };
 
   const handlePriceChange = (range: { minPrice: number; maxPrice: number }) => {
-    showGridLoader();
-    setPriceRange({
+    const nextPriceRange = {
       minPrice: Math.min(range.minPrice, range.maxPrice),
       maxPrice: Math.max(range.minPrice, range.maxPrice),
-    });
+    };
+
+    showGridLoader();
+    setPriceRange(nextPriceRange);
     setCurrentPage(1);
   };
 
@@ -153,7 +163,7 @@ export default function VendorDirectory() {
         </p>
 
         <div className="mb-6">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar initialValues={searchTerm} onSearch={handleSearch} />
         </div>
 
         <div className="flex flex-col gap-6 sm:flex-row items-start">
@@ -186,4 +196,10 @@ export default function VendorDirectory() {
       </div>
     </section>
   );
+}
+
+function getNumberParam(value: string | null, fallback: number) {
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 }

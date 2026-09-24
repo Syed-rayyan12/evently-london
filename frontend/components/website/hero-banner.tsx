@@ -1,7 +1,8 @@
+"use client";
+
+import { FormEvent, useState } from "react";
 import {
-  CalendarDays,
   Camera,
-  MapPin,
   Music,
   Search,
   Utensils,
@@ -9,6 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { WebsiteHeader } from "./header";
 import { HeroCarousel } from "./hero-carousel";
 
@@ -38,7 +40,40 @@ const categoryLinks = [
   { label: "Exclusive Perks", icon: Users },
 ];
 
+const budgetOptions = [
+  { label: "Any budget", minPrice: "", maxPrice: "" },
+  { label: "Under £500", minPrice: "", maxPrice: "500" },
+  { label: "£500 - £1,500", minPrice: "500", maxPrice: "1500" },
+  { label: "£1,500 - £5,000", minPrice: "1500", maxPrice: "5000" },
+  { label: "£5,000+", minPrice: "5000", maxPrice: "100000" },
+];
+
 export function HeroBanner() {
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [budget, setBudget] = useState("0");
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const selectedBudget = budgetOptions[Number(budget)] ?? budgetOptions[0];
+    const params = new URLSearchParams();
+
+    if (query.trim()) {
+      params.set("query", query.trim());
+    }
+
+    if (selectedBudget.minPrice) {
+      params.set("minPrice", selectedBudget.minPrice);
+    }
+
+    if (selectedBudget.maxPrice) {
+      params.set("maxPrice", selectedBudget.maxPrice);
+    }
+
+    router.push(params.toString() ? `/vendor?${params.toString()}` : "/vendor");
+  };
+
   return (
     <section className="hero-banner-section relative min-h-[100vh] overflow-hidden bg-ink text-white">
       <WebsiteHeader overlay />
@@ -81,58 +116,25 @@ export function HeroBanner() {
       </div>
 
       <div className="hero-search-panel relative z-20 mx-auto mb-6  container-sub max-w-[90%] rounded-[14px] bg-white p-3 shadow-2xl shadow-black/25 lg:absolute lg:bottom-24 lg:left-1/2 lg:mb-0 lg:-translate-x-1/2">
-        <form>
-          <div className="hero-search-grid grid gap-3 px-3 pb-2 pt-8 lg:grid-cols-[1fr_1fr_1fr_1fr_auto]">
+        <form onSubmit={handleSearch}>
+          <div className="hero-search-grid grid gap-3 px-3 pb-2 pt-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(220px,0.7fr)_auto]">
             <div>
               <label
                 htmlFor="hero-event-type"
                 className="mb-2 block font-inter text-[13.27px] font-normal leading-none text-ink"
               >
-                What are you Planning?
+                Search Vendors
               </label>
               <div className="flex min-h-14 items-center gap-3 rounded-[10px] border border-brand-line px-4">
                 <Search className="h-5 w-5 shrink-0 text-gold" aria-hidden="true" />
                 <input
                   id="hero-event-type"
                   type="text"
-                  name="eventType"
-                  placeholder="Wedding, party, corporate"
+                  name="query"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search vendor, category, or style"
                   className="w-full bg-transparent font-inter text-base font-normal text-ink outline-none placeholder:text-muted/70"
-                />
-              </div>
-            </div>
-            <div>
-              <label
-                htmlFor="hero-location"
-                className="mb-2 block font-inter text-[13.27px] font-normal leading-none text-ink"
-              >
-                Location
-              </label>
-              <div className="flex min-h-14 items-center gap-3 rounded-[10px] border border-brand-line px-4">
-                <MapPin className="h-5 w-5 shrink-0 text-gold" aria-hidden="true" />
-                <input
-                  id="hero-location"
-                  type="text"
-                  name="location"
-                  placeholder="City or area"
-                  className="w-full bg-transparent font-inter text-base font-normal text-ink outline-none placeholder:text-muted/70"
-                />
-              </div>
-            </div>
-            <div>
-              <label
-                htmlFor="hero-date"
-                className="mb-2 block font-inter text-[13.27px] font-normal leading-none text-ink"
-              >
-                Event Date
-              </label>
-              <div className="flex min-h-14 items-center gap-3 rounded-[10px] border border-brand-line px-4">
-                <CalendarDays className="h-5 w-5 shrink-0 text-gold" aria-hidden="true" />
-                <input
-                  id="hero-date"
-                  type="date"
-                  name="date"
-                  className="w-full bg-transparent font-inter text-base font-normal text-ink outline-none"
                 />
               </div>
             </div>
@@ -145,13 +147,19 @@ export function HeroBanner() {
               </label>
               <div className="flex min-h-14 items-center gap-3 rounded-[10px] border border-brand-line px-4">
                 <Wallet className="h-5 w-5 shrink-0 text-gold" aria-hidden="true" />
-                <input
+                <select
                   id="hero-budget"
-                  type="text"
                   name="budget"
-                  placeholder="$2,000 - $8,000"
+                  value={budget}
+                  onChange={(event) => setBudget(event.target.value)}
                   className="w-full bg-transparent font-inter text-base font-normal text-ink outline-none placeholder:text-muted/70"
-                />
+                >
+                  {budgetOptions.map((option, index) => (
+                    <option key={option.label} value={index}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <button
