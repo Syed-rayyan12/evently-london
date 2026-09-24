@@ -66,7 +66,7 @@ export function AdminHeaderActions() {
             {notifications.length}
           </span>
         </summary>
-        <div className="absolute right-0 mt-3 w-[330px] overflow-hidden rounded-[12px] border border-[#dfe7e2] bg-white text-[#16231f] shadow-xl">
+        <div className="absolute left-1/2 z-50 mt-3 w-[calc(100vw-2rem)] max-w-[330px] -translate-x-1/2 overflow-hidden rounded-[12px] border border-[#dfe7e2] bg-white text-[#16231f] shadow-xl sm:left-auto sm:right-0 sm:w-[330px] sm:translate-x-0">
           <div className="border-b border-[#edf1ee] px-4 py-3">
             <h2 className="font-inter text-[15px] font-semibold">
               Notifications

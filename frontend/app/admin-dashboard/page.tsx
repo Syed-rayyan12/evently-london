@@ -135,7 +135,7 @@ export default function AdminDashboardPage() {
     <div className="space-y-7">
       <section className="rounded-[16px] bg-white p-6 shadow-lg shadow-[#0D5B46]/10">
         <h2 className="[font-family:var(--font-playfair)] main-heading text-[40px] font-normal leading-tight text-[#16231f]">
-          Admin Dashboard
+          Admin 
         </h2>
         <p className="mt-3 max-w-2xl font-inter text-[16px] leading-7 text-[#68746e]">
           Monitor live platform vendors, customers, enquiries, reviews, and category performance.
