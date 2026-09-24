@@ -78,7 +78,7 @@ export function AdminDashboardShell({
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-4 pb-28 pt-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
+        <main className="min-h-[calc(100vh-80px)] bg-[#f3f4f6] px-4 pb-7 pt-5 max-[520px]:pb-28 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
           {children}
         </main>
         <MobileDashboardNav

@@ -183,13 +183,13 @@ export default function AdminDashboardPage() {
                 Live customer enquiry volume by selected period.
               </p>
             </div>
-            <div className="flex rounded-[10px] tabs border border-[#dfe7e2] bg-[#f5f7f4] p-1">
+            <div className="inline-flex w-fit max-w-full rounded-[10px] border border-[#dfe7e2] bg-[#f5f7f4] p-1">
               {periodTabs.map((tab) => (
                 <button
                   key={tab.value}
                   type="button"
                   onClick={() => setPeriod(tab.value)}
-                  className={`min-h-9 rounded-[8px] px-3 font-inter text-[13px] font-semibold ${
+                  className={`min-h-9 whitespace-nowrap rounded-[8px] px-3 font-inter text-[13px] font-semibold ${
                     period === tab.value
                       ? "bg-[#01241D] text-white"
                       : "text-[#68746e] hover:text-[#01241D]"

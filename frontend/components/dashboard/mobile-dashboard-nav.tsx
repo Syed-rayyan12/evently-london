@@ -23,10 +23,10 @@ export function MobileDashboardNav({
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#001B12] px-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 text-white shadow-[0_-12px_30px_rgba(0,0,0,0.2)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] text-white max-[520px]:block"
       aria-label={label}
     >
-      <div className="flex gap-1 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mx-auto flex max-w-[420px] gap-1 overflow-x-auto overscroll-x-contain rounded-[22px] border border-white/10 bg-[#001B12] p-2 shadow-[0_-12px_30px_rgba(0,0,0,0.24)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {links.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -38,7 +38,7 @@ export function MobileDashboardNav({
             <Link
               key={item.label}
               href={item.href}
-              className={`flex min-w-[76px] flex-1 flex-col items-center justify-center gap-1 rounded-[10px] px-2 py-2 text-center font-inter text-[11px] font-semibold transition-colors ${
+              className={`flex min-w-[68px] flex-1 flex-col items-center justify-center gap-1 rounded-[16px] px-2 py-2 text-center font-inter text-[10px] font-semibold transition-colors ${
                 isActive
                   ? "bg-white text-[#0D5B46]"
                   : "text-white/75 hover:bg-white/10 hover:text-white"
