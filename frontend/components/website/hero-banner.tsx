@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   Camera,
   Music,
@@ -50,8 +50,32 @@ const budgetOptions = [
 
 export function HeroBanner() {
   const router = useRouter();
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
   const [query, setQuery] = useState("");
   const [budget, setBudget] = useState("0");
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -75,7 +99,12 @@ export function HeroBanner() {
   };
 
   return (
-    <section className="hero-banner-section relative min-h-[100vh] overflow-hidden bg-ink text-white">
+    <section
+      ref={sectionRef}
+      className={`hero-banner-section hero-scroll-reveal relative min-h-[100vh] overflow-hidden bg-ink text-white ${
+        isInView ? "is-in-view" : ""
+      }`}
+    >
       <WebsiteHeader overlay />
 
       <HeroCarousel slides={slides} />
@@ -89,17 +118,31 @@ export function HeroBanner() {
           Curated Celebrations.<span>Elevated experiences.</span>
 
           </p> */}
-          <h1 className="font-pt-serif text-[72px] capitalize font-normal  leading-[1.1] text-white ">
-            Celebrate Love In <br /><span className="font-pt-serif text-[74px] font-normal capitalize text-gold">Luxury.</span>
+          <h1 className="font-pt-serif text-[72px] capitalize font-normal leading-[1.1] text-white">
+            <span className="hero-heading-reveal">
+              <span>Celebrate Love In</span>
+            </span>
+            <span className="hero-heading-reveal hero-delay-1">
+              <span
+                className="font-pt-serif text-[74px] font-normal capitalize text-gold"
+              >
+                Luxury.
+              </span>
+            </span>
           </h1>
-          <p className="mt-7 font-inter font-normal max-w-2xl text-[26px] leading-8 text-white/82 sm:text-xl">
+          <p
+            className="hero-copy-reveal hero-delay-2 mt-7 max-w-2xl font-inter text-[26px] font-normal leading-8 text-white/82 sm:text-xl"
+          >
            Hire a South Indian wedding planner in London with confidence, bringing life and luxury to your events.
           </p>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div
+            className=" mt-9 flex flex-col gap-3 sm:flex-row"
+            
+          >
             <Link
               href="/signup"
-              className="btn-slide group rounded-[10px] bg-[#003224] px-10 py-4 font-inter text-[16px] font-normal capitalize text-white"
+              className="btn-slide group  rounded-[10px] bg-[#003224] px-10 py-4 font-inter text-[16px] font-normal capitalize text-white"
             >
               <span className="btn-slide-overlay btn-slide-overlay-gold" />
               <span className="btn-slide-label">Find Vendor</span>

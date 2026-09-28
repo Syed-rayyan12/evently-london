@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,10 +33,38 @@ const categories = [
 ];
 
 export function CategoryCards() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -15% 0px", threshold: 0.18 }
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
+      ref={sectionRef}
       id="categories"
-      className="home-category-section relative overflow-hidden bg-home px-5 py-20 lg:px-8"
+      className={`home-category-section category-scroll-reveal relative overflow-hidden bg-home px-5 py-20 lg:px-8 ${
+        isInView ? "is-in-view" : ""
+      }`}
     >
       <div
         className="absolute left-0 top-0 z-10 animate-shape-float"
@@ -50,17 +81,17 @@ export function CategoryCards() {
       <div className="home-section-inner mx-auto max-w-[90%]">
         <div className="home-section-heading-row mb-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="home-section-title mt-3 font-pt-serif text-[44px] capitalize font-normal text-ink sm:text-5xl">
-              Browse By Occasion
+            <h2 className="home-section-title category-heading-reveal mt-3 font-pt-serif text-[44px] capitalize font-normal text-ink sm:text-5xl">
+              <span>Browse By Occasion</span>
             </h2>
-            <p className="home-section-copy font-inter text-[18px] font-normal   text-black mt-4">
+            <p className="home-section-copy category-copy-reveal category-delay-1 mt-4 font-inter text-[18px] font-normal text-black">
               Browse curated categories for every celebration.
             </p>
           </div>
 
           <Link
             href="#categories"
-            className="group inline-flex items-center gap-2 self-start font-inter text-[16px] font-normal text-ink transition-colors hover:text-gold sm:self-auto"
+            className="category-button-reveal category-delay-2 group inline-flex items-center gap-2 self-start font-inter text-[16px] font-normal text-ink transition-colors hover:text-gold sm:self-auto"
           >
             <span className="text-hover-underline capitalize">
               View all categories
@@ -73,11 +104,13 @@ export function CategoryCards() {
         </div>
 
         <div className="home-category-grid grid gap-5 sm:grid-cols-2 lg:grid-cols-6">
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <Link
               key={category.name}
               href="#categories"
-              className="home-category-card group block overflow-hidden capitalize rounded-[10px] border border-brand-gold/35 bg-white"
+              className={`home-category-card category-card-reveal category-delay-${
+                index + 3
+              } group block overflow-hidden rounded-[10px] border border-brand-gold/35 bg-white capitalize`}
             >
               <div className="relative aspect-[1] overflow-hidden">
                 <Image

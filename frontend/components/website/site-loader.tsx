@@ -9,7 +9,10 @@ export function SiteLoader() {
   const [isVisible, setIsVisible] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
 
+
+
   useEffect(() => {
+      document.body.classList.remove("site-loaded");
     const startedAt = performance.now();
     let didFinish = false;
     let hideTimer: ReturnType<typeof setTimeout> | undefined;
@@ -26,7 +29,10 @@ export function SiteLoader() {
 
       hideTimer = setTimeout(() => {
         setIsLeaving(true);
-        removeTimer = setTimeout(() => setIsVisible(false), 520);
+        removeTimer = setTimeout(() => {
+          setIsVisible(false);
+          document.body.classList.add("site-loaded");
+        }, 520);
       }, remaining);
     };
 

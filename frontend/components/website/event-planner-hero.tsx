@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Check } from "lucide-react";
 import { AnimatedShapeImage } from "./animated-shape-image";
@@ -29,8 +32,38 @@ const BUDGET_ICONS = {
 };
 
 export default function EventPlannerHero() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isInView, setIsInView] = useState(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -15% 0px", threshold: 0.18 }
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="home-event-planner relative w-full overflow-hidden bg-[#F5F0EA] px-6 py-16">
+    <section
+      ref={sectionRef}
+      className={`home-event-planner event-planner-reveal relative w-full overflow-hidden bg-[#F5F0EA] px-6 py-16 ${
+        isInView ? "is-in-view" : ""
+      }`}
+    >
         <AnimatedShapeImage
           src="/images/flower-1.png"
           width={103}
@@ -44,24 +77,26 @@ export default function EventPlannerHero() {
           {/* dotted vertical guide, decorative */}
           <span className="pointer-events-none absolute -right-5 top-0 hidden h-full  border-amber-400/70 lg:block" />
 
-          <p className="home-eyebrow text-[20px] font-normal font-inter  text-neutral-500">
+          <p className="event-eyebrow-reveal home-eyebrow text-[20px] font-normal font-inter  text-neutral-500">
          Every Celebration Deserves Care
           </p>
 
-          <h1 className="home-event-title mt-2 text-[38px] font-serif font-normal leading-tight text-neutral-900 ">
-            Design Your Perfect Celebration{" "}
-            <span className="text-[#D79D42]">Event</span>
+          <h1 className="event-heading-reveal home-event-title mt-2 text-[38px] font-serif font-normal leading-tight text-neutral-900 ">
+            <span>
+              Design Your Perfect Celebration{" "}
+              <span className="text-[#D79D42]">Event</span>
+            </span>
           </h1>
 
-          <p className="home-event-copy mt-4 max-w-md text-[18px] font-normal font-inter  text-neutral-600">
+          <p className="event-copy-reveal event-delay-1 home-event-copy mt-4 max-w-md text-[18px] font-normal font-inter  text-neutral-600">
           We help you build a beautiful event with genuine care and beauty, adding meaning to each occasion.
           </p>
 
           <ul className="home-feature-list mt-6 space-y-3">
-            {FEATURES.map((feature) => (
+            {FEATURES.map((feature, index) => (
               <li
                 key={feature}
-                className="home-feature-item flex items-center gap-3 text-[15px] font-medium text-neutral-600"
+                className={`event-list-reveal event-delay-${index + 2} home-feature-item flex items-center gap-3 text-[15px] font-medium text-neutral-600`}
               >
             <span className="flex h-5 w-5 text-neutral-600 font-normal items-center justify-center rounded-full border-2 border-[#D79D42]">
                   <Check className="h-3 w-3 text-[#D79D42]" strokeWidth={3} />
@@ -73,7 +108,7 @@ export default function EventPlannerHero() {
 
           <button
             type="button"
-            className="home-event-cta btn-slide group mt-8 rounded-md bg-[#D79D42] px-7 py-3 text-sm font-semibold text-white shadow-sm"
+            className="event-button-reveal event-delay-7 home-event-cta btn-slide group mt-8 rounded-md bg-[#D79D42] px-7 py-3 text-sm font-semibold text-white shadow-sm"
           >
             <span className="btn-slide-overlay btn-slide-overlay-green" />
             <span className="btn-slide-label">Let’s Organise Your Event</span>
@@ -81,7 +116,7 @@ export default function EventPlannerHero() {
         </div>
 
         {/* Center column: couple image */}
-        <div className="home-event-image-wrap relative mx-auto w-full max-w-sm">
+        <div className="event-image-reveal event-delay-5 home-event-image-wrap relative mx-auto w-full max-w-sm">
           <span className="pointer-events-none absolute -right-5 top-0 hidden h-full  lg:block" />
           <div className="overflow-hidden rounded-xl shadow-lg">
             <Image
@@ -96,7 +131,7 @@ export default function EventPlannerHero() {
         </div>
 
         {/* Right column: event plan card */}
-        <div className="home-event-plan mx-auto w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+        <div className="event-card-reveal event-delay-6 home-event-plan mx-auto w-full max-w-sm rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between">
             <h2 className="text-[20px] font-pt-serif  font-normal text-neutral-900">
               Your Event Plan
@@ -111,13 +146,13 @@ export default function EventPlannerHero() {
           </p>
 
           <ul className="mt-5 divide-y divide-neutral-100">
-            {BUDGET_ITEMS.map((item) => {
+            {BUDGET_ITEMS.map((item, index) => {
               const icon = BUDGET_ICONS[item.label as keyof typeof BUDGET_ICONS];
 
               return (
                 <li
                   key={item.label}
-                  className="flex items-center justify-between gap-4 py-2.5 text-sm"
+                  className={`event-row-reveal event-delay-${index + 7} flex items-center justify-between gap-4 py-2.5 text-sm`}
                 >
                   <span className="flex min-w-0 items-center gap-3 text-neutral-600">
                     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-50 text-[#D79D42]">

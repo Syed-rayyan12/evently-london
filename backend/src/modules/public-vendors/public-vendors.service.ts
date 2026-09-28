@@ -8,6 +8,7 @@ import type {
 
 export const publicVendorSelect = {
   id: true,
+  name: true,
   email: true,
   phone: true,
   approvalStatus: true,
@@ -25,6 +26,7 @@ export const publicVendorSelect = {
     select: {
       id: true,
       name: true,
+      category: true,
       startingPrice: true,
       description: true,
       packages: {
@@ -81,6 +83,7 @@ export const publicVendorSelect = {
 type PublicVendorUser = Parameters<typeof mapUserToPublicVendor>[0];
 
 const searchKeywordGroups = [
+  ["wedding", "shaadi", "nikah", "walima", "baraat", "sangeet", "reception", "engagement", "bridal", "groom", "marriage", "ceremony", "planner", "decor", "floral", "flowers", "mandap", "stage", "backdrop", "venue", "banquet", "catering", "photography", "videography", "makeup", "mua", "hair", "hair stylist", "styling", "henna", "mehndi", "dj", "music", "lighting", "invitation", "wedding car", "bridal wear", "lehenga", "sherwani"],
   ["decor", "decoration", "styling", "floral", "flowers", "mandap", "stage", "backdrop", "tablescape", "centrepiece", "centerpiece", "theme setup"],
   ["photography", "photo", "photographer", "photoshoot", "portraits", "pre wedding", "candid", "album", "camera"],
   ["video", "videography", "cinematography", "film", "reels", "highlight", "drone", "trailer"],
@@ -259,6 +262,7 @@ export async function getPublicVendorBySlug(slug: string): Promise<PublicVendorD
 
 export function mapUserToPublicVendor(user: {
   id: string;
+  name: string;
   email: string;
   phone: string | null;
   approvalStatus: string;
@@ -273,6 +277,7 @@ export function mapUserToPublicVendor(user: {
   vendorServices: Array<{
     id: string;
     name: string;
+    category: string;
     startingPrice: string;
     description: string | null;
     packages: Array<{ id: string; name: string; description: string | null; price: string }>;
@@ -403,12 +408,16 @@ function scoreVendorSearch(
 ) {
   const fields = [
     { value: vendor.name, weight: 90 },
+    { value: user.name, weight: 85 },
+    { value: user.vendorProfile?.ownerName, weight: 85 },
+    { value: user.email, weight: 30 },
     { value: vendor.category, weight: 70 },
     { value: vendor.tagline, weight: 35 },
     { value: vendor.about, weight: 30 },
     { value: vendor.location, weight: 15 },
     ...user.vendorServices.flatMap((service) => [
       { value: service.name, weight: 65 },
+      { value: service.category, weight: 55 },
       { value: service.description ?? "", weight: 35 },
       ...service.packages.flatMap((packageItem) => [
         { value: packageItem.name, weight: 45 },
